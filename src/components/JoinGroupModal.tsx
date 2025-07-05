@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -90,6 +90,9 @@ export const JoinGroupModal = ({ onGroupJoined }: { onGroupJoined?: () => void }
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Join Private Circle</DialogTitle>
+          <DialogDescription>
+            Enter the secret code provided by the circle creator to join a private savings circle.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleJoinPrivateGroup} className="space-y-4">
           <div className="space-y-2">

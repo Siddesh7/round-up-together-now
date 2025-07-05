@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Users, CircleDollarSign, Calendar, Shield } from 'lucide-react';
@@ -61,6 +61,9 @@ export const GroupDetailsModal: React.FC<GroupDetailsModalProps> = ({
             <Icon className="w-5 h-5" />
             {group.name}
           </DialogTitle>
+          <DialogDescription>
+            View detailed information about this savings circle and join if you're interested.
+          </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-4">

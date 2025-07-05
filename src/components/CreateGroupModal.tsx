@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -119,6 +119,9 @@ export const CreateGroupModal = ({ onGroupCreated }: { onGroupCreated?: () => vo
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Create New Savings Circle</DialogTitle>
+          <DialogDescription>
+            Set up a new savings circle by providing the details below. Choose between public, private, or community circles.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
