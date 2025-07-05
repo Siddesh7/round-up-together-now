@@ -64,7 +64,7 @@ export const CreateGroupModal = ({ onGroupCreated }: { onGroupCreated?: () => vo
 
       if (memberError) throw memberError;
 
-      toast({ title: 'Group created successfully!' });
+      toast({ title: 'Circle created successfully!' });
       setOpen(false);
       setFormData({
         name: '',
@@ -77,7 +77,7 @@ export const CreateGroupModal = ({ onGroupCreated }: { onGroupCreated?: () => vo
       onGroupCreated?.();
     } catch (error: any) {
       toast({
-        title: 'Error creating group',
+        title: 'Error creating circle',
         description: error.message,
         variant: 'destructive'
       });
@@ -93,16 +93,16 @@ export const CreateGroupModal = ({ onGroupCreated }: { onGroupCreated?: () => vo
       <DialogTrigger asChild>
         <Button className="gradient-primary">
           <Plus className="w-4 h-4 mr-2" />
-          Create Group
+          Create Circle
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Create New Savings Group</DialogTitle>
+          <DialogTitle>Create New Savings Circle</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Group Name</Label>
+            <Label htmlFor="name">Circle Name</Label>
             <Input
               id="name"
               value={formData.name}
@@ -117,20 +117,20 @@ export const CreateGroupModal = ({ onGroupCreated }: { onGroupCreated?: () => vo
               id="description"
               value={formData.description}
               onChange={(e) => setFormData({...formData, description: e.target.value})}
-              placeholder="Tell people what this group is for..."
+              placeholder="Tell people what this circle is for..."
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="type">Group Type</Label>
+            <Label htmlFor="type">Circle Type</Label>
             <Select value={formData.type} onValueChange={(value) => setFormData({...formData, type: value})}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="public">Public - Anyone can join</SelectItem>
-                <SelectItem value="private">Private - Requires secret code</SelectItem>
-                <SelectItem value="community">Community - Verified members</SelectItem>
+                <SelectItem value="public">Public Circle - Anyone can join</SelectItem>
+                <SelectItem value="private">Private Circle - Requires secret code</SelectItem>
+                <SelectItem value="community">Community Circle - Verified members</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -175,7 +175,7 @@ export const CreateGroupModal = ({ onGroupCreated }: { onGroupCreated?: () => vo
           </div>
 
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'Creating...' : 'Create Group'}
+            {loading ? 'Creating...' : 'Create Circle'}
           </Button>
         </form>
       </DialogContent>

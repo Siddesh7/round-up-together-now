@@ -22,17 +22,17 @@ interface GroupCardProps {
 
 const typeConfig = {
   private: {
-    label: 'Private',
+    label: 'Private Circle',
     color: 'bg-primary text-primary-foreground',
     icon: Shield
   },
   public: {
-    label: 'Public',
+    label: 'Public Circle',
     color: 'bg-trust-blue text-white',
     icon: Users
   },
   community: {
-    label: 'Community',
+    label: 'Community Circle',
     color: 'bg-warm-orange text-white',
     icon: Users
   }
@@ -73,7 +73,7 @@ export const GroupCard: React.FC<GroupCardProps> = ({ group, onClick }) => {
       </CardHeader>
 
       <CardContent className="pt-0">
-        {/* Group Stats */}
+        {/* Circle Stats */}
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div className="flex items-center gap-2">
             <Users className="w-4 h-4 text-muted-foreground" />
@@ -93,7 +93,7 @@ export const GroupCard: React.FC<GroupCardProps> = ({ group, onClick }) => {
         {/* Progress Bar */}
         <div className="mb-4">
           <div className="flex justify-between text-xs text-muted-foreground mb-1">
-            <span>Group Progress</span>
+            <span>Circle Progress</span>
             <span>{Math.round(progress)}% full</span>
           </div>
           <div className="w-full bg-muted rounded-full h-2">

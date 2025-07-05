@@ -34,9 +34,9 @@ export const Dashboard = () => {
   // Calculate user stats from real data
   const userStats = {
     totalSaved: userGroups.reduce((sum, group) => sum + (group.monthly_amount / 100), 0),
-    activeGroups: userGroups.length,
+    activeCircles: userGroups.length,
     nextPayout: userGroups.reduce((max, group) => Math.max(max, group.monthly_amount), 0) / 100,
-    payoutDate: userGroups[0]?.next_payout_date || 'No active groups'
+    payoutDate: userGroups[0]?.next_payout_date || 'No active circles'
   };
 
   if (!user) {
@@ -46,7 +46,7 @@ export const Dashboard = () => {
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold mb-4">Welcome to Community Pool</h1>
             <p className="text-muted-foreground mb-8">
-              Join savings groups and achieve your financial goals together
+              Join savings circles and achieve your financial goals together
             </p>
           </div>
           <div className="flex justify-center">
@@ -93,9 +93,9 @@ export const Dashboard = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Active Groups</p>
+                  <p className="text-sm text-muted-foreground">Active Circles</p>
                   <p className="text-2xl font-bold text-trust-blue">
-                    {userStats.activeGroups}
+                    {userStats.activeCircles}
                   </p>
                 </div>
                 <Users className="w-8 h-8 text-trust-blue" />
@@ -140,7 +140,7 @@ export const Dashboard = () => {
                 <div>
                   <h3 className="text-lg font-semibold mb-2">Ready to start saving?</h3>
                   <p className="text-muted-foreground">
-                    Join an existing group or create your own savings circle
+                    Join an existing circle or create your own savings circle
                   </p>
                 </div>
                 <div className="flex gap-3">
@@ -152,11 +152,11 @@ export const Dashboard = () => {
           </Card>
         </div>
 
-        {/* Your Groups */}
+        {/* Your Circles */}
         {userGroups.length > 0 && (
           <div className="mb-8">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-foreground">Your Groups</h2>
+              <h2 className="text-2xl font-bold text-foreground">Your Circles</h2>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -193,22 +193,22 @@ export const Dashboard = () => {
           </div>
         )}
 
-        {/* Available Groups */}
+        {/* Available Circles */}
         <div>
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-2xl font-bold text-foreground">Available Groups</h2>
+              <h2 className="text-2xl font-bold text-foreground">Available Circles</h2>
               <p className="text-muted-foreground">
-                Public and community groups you can join
+                Public and community circles you can join
               </p>
             </div>
             <Badge variant="outline" className="text-warm-orange border-warm-orange">
-              {groups.length} groups available
+              {groups.length} circles available
             </Badge>
           </div>
           
           {loading ? (
-            <div className="text-center py-8">Loading groups...</div>
+            <div className="text-center py-8">Loading circles...</div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {groups.map((group) => (
@@ -244,7 +244,7 @@ export const Dashboard = () => {
           )}
         </div>
 
-        {/* Group Details Modal */}
+        {/* Circle Details Modal */}
         <GroupDetailsModal
           group={selectedGroup}
           isOpen={isModalOpen}

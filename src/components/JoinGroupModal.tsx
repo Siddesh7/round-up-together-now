@@ -31,12 +31,12 @@ export const JoinGroupModal = ({ onGroupJoined }: { onGroupJoined?: () => void }
         .single();
 
       if (groupError || !group) {
-        throw new Error('Invalid secret code or group not found');
+        throw new Error('Invalid secret code or circle not found');
       }
 
       // Check if group is full
       if (group.current_members >= group.max_members) {
-        throw new Error('Group is full');
+        throw new Error('Circle is full');
       }
 
       // Check if user is already a member
@@ -48,7 +48,7 @@ export const JoinGroupModal = ({ onGroupJoined }: { onGroupJoined?: () => void }
         .single();
 
       if (existingMember) {
-        throw new Error('You are already a member of this group');
+        throw new Error('You are already a member of this circle');
       }
 
       // Add user to group
@@ -68,7 +68,7 @@ export const JoinGroupModal = ({ onGroupJoined }: { onGroupJoined?: () => void }
       onGroupJoined?.();
     } catch (error: any) {
       toast({
-        title: 'Error joining group',
+        title: 'Error joining circle',
         description: error.message,
         variant: 'destructive'
       });
@@ -84,12 +84,12 @@ export const JoinGroupModal = ({ onGroupJoined }: { onGroupJoined?: () => void }
       <DialogTrigger asChild>
         <Button variant="outline">
           <Users className="w-4 h-4 mr-2" />
-          Join Private Group
+          Join Private Circle
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Join Private Group</DialogTitle>
+          <DialogTitle>Join Private Circle</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleJoinPrivateGroup} className="space-y-4">
           <div className="space-y-2">
@@ -98,12 +98,12 @@ export const JoinGroupModal = ({ onGroupJoined }: { onGroupJoined?: () => void }
               id="secretCode"
               value={secretCode}
               onChange={(e) => setSecretCode(e.target.value)}
-              placeholder="Enter the group's secret code"
+              placeholder="Enter the circle's secret code"
               required
             />
           </div>
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'Joining...' : 'Join Group'}
+            {loading ? 'Joining...' : 'Join Circle'}
           </Button>
         </form>
       </DialogContent>
