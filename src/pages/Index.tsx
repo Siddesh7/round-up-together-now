@@ -1,14 +1,24 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import React, { useState } from 'react';
+import { OnboardingFlow } from '@/components/OnboardingFlow';
+import { Dashboard } from '@/components/Dashboard';
+import { useNavigate } from 'react-router-dom';
 
 const Index = () => {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
-    </div>
-  );
+  const [showOnboarding, setShowOnboarding] = useState(true);
+  const navigate = useNavigate();
+
+  const handleOnboardingComplete = () => {
+    setShowOnboarding(false);
+    // In a real app, you might want to set a flag in localStorage or user preferences
+    navigate('/dashboard');
+  };
+
+  if (showOnboarding) {
+    return <OnboardingFlow onComplete={handleOnboardingComplete} />;
+  }
+
+  return <Dashboard />;
 };
 
 export default Index;
