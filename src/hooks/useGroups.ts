@@ -34,7 +34,8 @@ export const useGroups = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setGroups(data || []);
+      // Type assertion to ensure proper typing
+      setGroups((data as Group[]) || []);
     } catch (error) {
       console.error('Error fetching groups:', error);
     }
@@ -55,6 +56,7 @@ export const useGroups = () => {
       if (error) throw error;
       
       const userGroupsData = data?.map(item => item.groups).filter(Boolean) || [];
+      // Type assertion to ensure proper typing
       setUserGroups(userGroupsData as Group[]);
     } catch (error) {
       console.error('Error fetching user groups:', error);

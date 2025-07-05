@@ -77,60 +77,6 @@ export const JoinGroupModal = ({ onGroupJoined }: { onGroupJoined?: () => void }
     }
   };
 
-  const handleJoinPublicGroup = async (groupId: string) => {
-    if (!user) return;
-
-    try {
-      // Get group details
-      const { data: group, error: groupError } = await supabase
-        .from('groups')
-        .select('*')
-        .eq('id', groupId)
-        .single();
-
-      if (groupError || !group) {
-        throw new Error('Group not found');
-      }
-
-      // Check if group is full
-      if (group.current_members >= group.max_members) {
-        throw new Error('Group is full');
-      }
-
-      // Check if user is already a member
-      const { data: existingMember } = await supabase
-        .from('group_members')
-        .select('id')
-        .eq('group_id', group.id)
-        .eq('user_id', user.id)
-        .single();
-
-      if (existingMember) {
-        throw new Error('You are already a member of this group');
-      }
-
-      // Add user to group
-      const { error: memberError } = await supabase
-        .from('group_members')
-        .insert({
-          group_id: group.id,
-          user_id: user.id,
-          payout_order: group.current_members + 1
-        });
-
-      if (memberError) throw memberError;
-
-      toast({ title: `Successfully joined ${group.name}!` });
-      onGroupJoined?.();
-    } catch (error: any) {
-      toast({
-        title: 'Error joining group',
-        description: error.message,
-        variant: 'destructive'
-      });
-    }
-  };
-
   if (!user) return null;
 
   return (
@@ -164,6 +110,3 @@ export const JoinGroupModal = ({ onGroupJoined }: { onGroupJoined?: () => void }
     </Dialog>
   );
 };
-
-// Export the join function for use with public groups
-export { JoinGroupModal };
