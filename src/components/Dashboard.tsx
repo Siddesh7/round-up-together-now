@@ -4,66 +4,64 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { GroupCard } from './GroupCard';
-import { Plus, TrendingUp, Users, CircleDollarSign, Calendar } from 'lucide-react';
-
-const mockGroups = [
-  {
-    id: '1',
-    name: 'Family Savings Circle',
-    type: 'private' as const,
-    members: 8,
-    maxMembers: 10,
-    monthlyAmount: 500,
-    totalPot: 5000,
-    nextPayout: 'Jan 15',
-    description: 'Our family group saving for vacation and emergencies',
-    verified: true
-  },
-  {
-    id: '2',
-    name: 'Young Professionals Network',
-    type: 'community' as const,
-    members: 15,
-    maxMembers: 20,
-    monthlyAmount: 200,
-    totalPot: 4000,
-    nextPayout: 'Jan 20',
-    description: 'LinkedIn community members saving for career development',
-    verified: true
-  },
-  {
-    id: '3',
-    name: 'Neighborhood Friends',
-    type: 'public' as const,
-    members: 6,
-    maxMembers: 12,
-    monthlyAmount: 100,
-    totalPot: 1200,
-    nextPayout: 'Jan 25',
-    description: 'Local community members helping each other save',
-    verified: false
-  }
-];
-
-const userStats = {
-  totalSaved: 2400,
-  activeGroups: 3,
-  nextPayout: 5000,
-  payoutDate: 'March 15, 2024'
-};
+import { CreateGroupModal } from './CreateGroupModal';
+import { JoinGroupModal } from './JoinGroupModal';
+import { AuthButton } from './AuthButton';
+import { TrendingUp, Users, CircleDollarSign, Calendar } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { useGroups } from '@/hooks/useGroups';
 
 export const Dashboard = () => {
+  const { user } = useAuth();
+  const { groups, userGroups, loading, refetch, joinGroup } = useGroups();
+
+  const handleJoinGroup = async (groupId: string) => {
+    const success = await joinGroup(groupId);
+    if (success) {
+      refetch();
+    }
+  };
+
+  // Calculate user stats from real data
+  const userStats = {
+    totalSaved: userGroups.reduce((sum, group) => sum + (group.monthly_amount / 100), 0),
+    activeGroups: userGroups.length,
+    nextPayout: userGroups.reduce((max, group) => Math.max(max, group.monthly_amount), 0) / 100,
+    payoutDate: userGroups[0]?.next_payout_date || 'No active groups'
+  };
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 p-4">
+        <div className="max-w-2xl mx-auto">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold mb-4">Welcome to Community Pool</h1>
+            <p className="text-muted-foreground mb-8">
+              Join savings groups and achieve your financial goals together
+            </p>
+          </div>
+          <div className="flex justify-center">
+            <AuthButton />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 p-4">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">
-            Welcome back, Sarah! 👋
-          </h1>
-          <p className="text-muted-foreground">
-            Your savings journey continues with your trusted community
-          </p>
+        <div className="mb-8 flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground mb-2">
+              Welcome back! 👋
+            </h1>
+            <p className="text-muted-foreground">
+              Your savings journey continues with your trusted community
+            </p>
+          </div>
+          <AuthButton />
         </div>
 
         {/* Stats Overview */}
@@ -114,9 +112,9 @@ export const Dashboard = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Payout Date</p>
+                  <p className="text-sm text-muted-foreground">Next Payout</p>
                   <p className="text-sm font-semibold text-foreground">
-                    {userStats.payoutDate}
+                    {typeof userStats.payoutDate === 'string' ? userStats.payoutDate : new Date(userStats.payoutDate).toLocaleDateString()}
                   </p>
                 </div>
                 <Calendar className="w-8 h-8 text-primary" />
@@ -137,13 +135,8 @@ export const Dashboard = () => {
                   </p>
                 </div>
                 <div className="flex gap-3">
-                  <Button variant="outline" className="hover:scale-105 transition-transform">
-                    Browse Groups
-                  </Button>
-                  <Button className="gradient-primary hover:scale-105 transition-transform">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Create Group
-                  </Button>
+                  <JoinGroupModal onGroupJoined={refetch} />
+                  <CreateGroupModal onGroupCreated={refetch} />
                 </div>
               </div>
             </CardContent>
@@ -151,72 +144,72 @@ export const Dashboard = () => {
         </div>
 
         {/* Your Groups */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-foreground">Your Groups</h2>
-            <Button variant="ghost" className="text-primary hover:text-primary/80">
-              View All
-            </Button>
+        {userGroups.length > 0 && (
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-foreground">Your Groups</h2>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {userGroups.map((group) => (
+                <GroupCard 
+                  key={group.id} 
+                  group={{
+                    id: group.id,
+                    name: group.name,
+                    type: group.type,
+                    members: group.current_members,
+                    maxMembers: group.max_members,
+                    monthlyAmount: group.monthly_amount / 100,
+                    totalPot: (group.monthly_amount / 100) * group.current_members,
+                    nextPayout: new Date(group.next_payout_date).toLocaleDateString(),
+                    description: group.description || '',
+                    verified: true
+                  }}
+                />
+              ))}
+            </div>
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {mockGroups.map((group) => (
-              <GroupCard 
-                key={group.id} 
-                group={group}
-                onClick={() => console.log('Navigate to group:', group.id)}
-              />
-            ))}
-          </div>
-        </div>
+        )}
 
-        {/* Featured Groups */}
+        {/* Available Groups */}
         <div>
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-2xl font-bold text-foreground">Featured Groups</h2>
+              <h2 className="text-2xl font-bold text-foreground">Available Groups</h2>
               <p className="text-muted-foreground">
-                Popular groups you might want to join
+                Public and community groups you can join
               </p>
             </div>
             <Badge variant="outline" className="text-warm-orange border-warm-orange">
-              New groups weekly
+              {groups.length} groups available
             </Badge>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <GroupCard 
-              group={{
-                id: '4',
-                name: 'Tech Startup Employees',
-                type: 'community',
-                members: 18,
-                maxMembers: 25,
-                monthlyAmount: 300,
-                totalPot: 7500,
-                nextPayout: 'Feb 1',
-                description: 'Verified tech workers saving for side projects and education',
-                verified: true
-              }}
-              onClick={() => console.log('Navigate to featured group')}
-            />
-            
-            <GroupCard 
-              group={{
-                id: '5',
-                name: 'College Alumni Network',
-                type: 'community',
-                members: 12,
-                maxMembers: 15,
-                monthlyAmount: 250,
-                totalPot: 3750,
-                nextPayout: 'Feb 5',
-                description: 'University alumni helping each other with financial goals',
-                verified: true
-              }}
-              onClick={() => console.log('Navigate to featured group')}
-            />
-          </div>
+          {loading ? (
+            <div className="text-center py-8">Loading groups...</div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {groups.map((group) => (
+                <GroupCard 
+                  key={group.id} 
+                  group={{
+                    id: group.id,
+                    name: group.name,
+                    type: group.type,
+                    members: group.current_members,
+                    maxMembers: group.max_members,
+                    monthlyAmount: group.monthly_amount / 100,
+                    totalPot: (group.monthly_amount / 100) * group.current_members,
+                    nextPayout: new Date(group.next_payout_date).toLocaleDateString(),
+                    description: group.description || '',
+                    verified: group.type === 'community'
+                  }}
+                  onClick={() => handleJoinGroup(group.id)}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
