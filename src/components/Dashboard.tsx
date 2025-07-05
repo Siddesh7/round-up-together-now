@@ -1,9 +1,10 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { GroupCard } from './GroupCard';
+import { GroupDetailsModal } from './GroupDetailsModal';
 import { CreateGroupModal } from './CreateGroupModal';
 import { JoinGroupModal } from './JoinGroupModal';
 import { AuthButton } from './AuthButton';
@@ -14,11 +15,19 @@ import { useGroups } from '@/hooks/useGroups';
 export const Dashboard = () => {
   const { user } = useAuth();
   const { groups, userGroups, loading, refetch, joinGroup } = useGroups();
+  const [selectedGroup, setSelectedGroup] = useState<any>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleGroupClick = (group: any) => {
+    setSelectedGroup(group);
+    setIsModalOpen(true);
+  };
 
   const handleJoinGroup = async (groupId: string) => {
     const success = await joinGroup(groupId);
     if (success) {
       refetch();
+      setIsModalOpen(false);
     }
   };
 
@@ -166,6 +175,18 @@ export const Dashboard = () => {
                     description: group.description || '',
                     verified: true
                   }}
+                  onClick={() => handleGroupClick({
+                    id: group.id,
+                    name: group.name,
+                    type: group.type,
+                    members: group.current_members,
+                    maxMembers: group.max_members,
+                    monthlyAmount: group.monthly_amount / 100,
+                    totalPot: (group.monthly_amount / 100) * group.current_members,
+                    nextPayout: new Date(group.next_payout_date).toLocaleDateString(),
+                    description: group.description || '',
+                    verified: true
+                  })}
                 />
               ))}
             </div>
@@ -205,12 +226,31 @@ export const Dashboard = () => {
                     description: group.description || '',
                     verified: group.type === 'community'
                   }}
-                  onClick={() => handleJoinGroup(group.id)}
+                  onClick={() => handleGroupClick({
+                    id: group.id,
+                    name: group.name,
+                    type: group.type,
+                    members: group.current_members,
+                    maxMembers: group.max_members,
+                    monthlyAmount: group.monthly_amount / 100,
+                    totalPot: (group.monthly_amount / 100) * group.current_members,
+                    nextPayout: new Date(group.next_payout_date).toLocaleDateString(),
+                    description: group.description || '',
+                    verified: group.type === 'community'
+                  })}
                 />
               ))}
             </div>
           )}
         </div>
+
+        {/* Group Details Modal */}
+        <GroupDetailsModal
+          group={selectedGroup}
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onJoin={handleJoinGroup}
+        />
       </div>
     </div>
   );
