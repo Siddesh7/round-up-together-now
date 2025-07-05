@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -28,6 +27,7 @@ export const CreateGroupModal = ({ onGroupCreated }: { onGroupCreated?: () => vo
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) {
+      console.error('No user found in auth context');
       toast({
         title: 'Authentication required',
         description: 'Please sign in to create a circle',
@@ -36,10 +36,18 @@ export const CreateGroupModal = ({ onGroupCreated }: { onGroupCreated?: () => vo
       return;
     }
 
-    console.log('Creating group with user ID:', user.id);
+    console.log('Starting group creation with user:', {
+      userId: user.id,
+      userEmail: user.email,
+      formData: formData
+    });
     
     setLoading(true);
     try {
+      // Check current session
+      const { data: session, error: sessionError } = await supabase.auth.getSession();
+      console.log('Current session check:', { session: session?.session, error: sessionError });
+
       const groupData: any = {
         name: formData.name,
         description: formData.description,
@@ -52,9 +60,11 @@ export const CreateGroupModal = ({ onGroupCreated }: { onGroupCreated?: () => vo
 
       if (formData.type === 'private' && formData.secretCode) {
         groupData.secret_code = formData.secretCode;
+        console.log('Adding secret code for private group:', formData.secretCode);
       }
 
-      console.log('Group data to insert:', groupData);
+      console.log('Group data being inserted:', groupData);
+      console.log('RLS check - auth.uid() should equal creator_id:', user.id);
 
       const { data: group, error: groupError } = await supabase
         .from('groups')
@@ -63,7 +73,13 @@ export const CreateGroupModal = ({ onGroupCreated }: { onGroupCreated?: () => vo
         .single();
 
       if (groupError) {
-        console.error('Group creation error:', groupError);
+        console.error('Detailed group creation error:', {
+          error: groupError,
+          code: groupError.code,
+          message: groupError.message,
+          details: groupError.details,
+          hint: groupError.hint
+        });
         throw groupError;
       }
 
@@ -95,7 +111,7 @@ export const CreateGroupModal = ({ onGroupCreated }: { onGroupCreated?: () => vo
       });
       onGroupCreated?.();
     } catch (error: any) {
-      console.error('Error creating circle:', error);
+      console.error('Complete error creating circle:', error);
       toast({
         title: 'Error creating circle',
         description: error.message || 'An unexpected error occurred',
