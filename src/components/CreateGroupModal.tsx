@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -58,8 +59,18 @@ export const CreateGroupModal = ({ onGroupCreated }: { onGroupCreated?: () => vo
         next_payout_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // 30 days from now
       };
 
-      if (formData.type === 'private' && formData.secretCode) {
-        groupData.secret_code = formData.secretCode;
+      // Only add secret_code if it's a private group AND has a non-empty secret code
+      if (formData.type === 'private') {
+        if (!formData.secretCode || formData.secretCode.trim() === '') {
+          toast({
+            title: 'Secret code required',
+            description: 'Private circles must have a secret code',
+            variant: 'destructive'
+          });
+          setLoading(false);
+          return;
+        }
+        groupData.secret_code = formData.secretCode.trim();
         console.log('Adding secret code for private group:', formData.secretCode);
       }
 
