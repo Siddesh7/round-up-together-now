@@ -190,7 +190,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_groups: {
+        Args: { user_uuid: string }
+        Returns: {
+          group_id: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
