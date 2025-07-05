@@ -27,15 +27,24 @@ export const CreateGroupModal = ({ onGroupCreated }: { onGroupCreated?: () => vo
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!user) {
+      toast({
+        title: 'Authentication required',
+        description: 'Please sign in to create a circle',
+        variant: 'destructive'
+      });
+      return;
+    }
 
+    console.log('Creating group with user ID:', user.id);
+    
     setLoading(true);
     try {
       const groupData: any = {
         name: formData.name,
         description: formData.description,
         type: formData.type,
-        creator_id: user.id,
+        creator_id: user.id, // Explicitly set the creator_id
         monthly_amount: Math.round(parseFloat(formData.monthlyAmount) * 100), // Convert to cents
         max_members: parseInt(formData.maxMembers),
         next_payout_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // 30 days from now
@@ -45,13 +54,20 @@ export const CreateGroupModal = ({ onGroupCreated }: { onGroupCreated?: () => vo
         groupData.secret_code = formData.secretCode;
       }
 
+      console.log('Group data to insert:', groupData);
+
       const { data: group, error: groupError } = await supabase
         .from('groups')
         .insert(groupData)
         .select()
         .single();
 
-      if (groupError) throw groupError;
+      if (groupError) {
+        console.error('Group creation error:', groupError);
+        throw groupError;
+      }
+
+      console.log('Group created successfully:', group);
 
       // Add creator as first member
       const { error: memberError } = await supabase
@@ -62,7 +78,10 @@ export const CreateGroupModal = ({ onGroupCreated }: { onGroupCreated?: () => vo
           payout_order: 1
         });
 
-      if (memberError) throw memberError;
+      if (memberError) {
+        console.error('Member addition error:', memberError);
+        throw memberError;
+      }
 
       toast({ title: 'Circle created successfully!' });
       setOpen(false);
@@ -76,9 +95,10 @@ export const CreateGroupModal = ({ onGroupCreated }: { onGroupCreated?: () => vo
       });
       onGroupCreated?.();
     } catch (error: any) {
+      console.error('Error creating circle:', error);
       toast({
         title: 'Error creating circle',
-        description: error.message,
+        description: error.message || 'An unexpected error occurred',
         variant: 'destructive'
       });
     } finally {
