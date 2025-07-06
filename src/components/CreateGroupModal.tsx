@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import {
   Dialog,
@@ -18,7 +19,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Plus } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Plus, MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -39,6 +41,9 @@ export const CreateGroupModal = ({
     monthlyAmount: "",
     maxMembers: "",
     secretCode: "",
+    telegramGroupHandle: "",
+    telegramVerificationEnabled: false,
+    minMembershipMonths: "6",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -59,6 +64,29 @@ export const CreateGroupModal = ({
         toast({
           title: "Secret code required",
           description: "Private circles must have a secret code",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    // Validate community group Telegram settings
+    if (formData.type === "community" && formData.telegramVerificationEnabled) {
+      if (!formData.telegramGroupHandle || formData.telegramGroupHandle.trim() === "") {
+        toast({
+          title: "Telegram group required",
+          description: "Please specify the Telegram group handle for verification",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Validate Telegram handle format
+      const telegramHandle = formData.telegramGroupHandle.trim();
+      if (!telegramHandle.match(/^@?[a-zA-Z][a-zA-Z0-9_]{4,31}$/)) {
+        toast({
+          title: "Invalid Telegram handle",
+          description: "Telegram handle should be 5-32 characters, starting with a letter",
           variant: "destructive",
         });
         return;
@@ -93,13 +121,26 @@ export const CreateGroupModal = ({
           .split("T")[0], // 30 days from now
       };
 
-      // Add secret_code for private groups (already validated above)
+      // Add secret_code for private groups
       if (formData.type === "private") {
         groupData.secret_code = formData.secretCode.trim();
         console.log(
           "Adding secret code for private group:",
           formData.secretCode
         );
+      }
+
+      // Add Telegram verification fields for community groups
+      if (formData.type === "community") {
+        groupData.telegram_verification_enabled = formData.telegramVerificationEnabled;
+        if (formData.telegramVerificationEnabled) {
+          groupData.telegram_group_handle = formData.telegramGroupHandle.trim().replace(/^@/, '');
+          groupData.min_membership_months = parseInt(formData.minMembershipMonths);
+          console.log("Adding Telegram verification settings:", {
+            telegram_group_handle: groupData.telegram_group_handle,
+            min_membership_months: groupData.min_membership_months
+          });
+        }
       }
 
       console.log("Group data being inserted:", groupData);
@@ -138,7 +179,13 @@ export const CreateGroupModal = ({
         throw memberError;
       }
 
-      toast({ title: "Circle created successfully!" });
+      toast({ 
+        title: "Circle created successfully!",
+        description: formData.type === "community" && formData.telegramVerificationEnabled 
+          ? "Community circle with Telegram verification is now active"
+          : undefined
+      });
+      
       setOpen(false);
       setFormData({
         name: "",
@@ -147,6 +194,9 @@ export const CreateGroupModal = ({
         monthlyAmount: "",
         maxMembers: "",
         secretCode: "",
+        telegramGroupHandle: "",
+        telegramVerificationEnabled: false,
+        minMembershipMonths: "6",
       });
       onGroupCreated?.();
     } catch (error: any) {
@@ -171,7 +221,7 @@ export const CreateGroupModal = ({
           Create Circle
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create New Savings Circle</DialogTitle>
           <DialogDescription>
@@ -241,6 +291,65 @@ export const CreateGroupModal = ({
                 placeholder="Enter a secret code for joining"
                 required
               />
+            </div>
+          )}
+
+          {formData.type === "community" && (
+            <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <MessageCircle className="w-4 h-4 text-primary" />
+                  <Label htmlFor="telegramVerification">Telegram Verification</Label>
+                </div>
+                <Switch
+                  id="telegramVerification"
+                  checked={formData.telegramVerificationEnabled}
+                  onCheckedChange={(checked) =>
+                    setFormData({ ...formData, telegramVerificationEnabled: checked })
+                  }
+                />
+              </div>
+              
+              {formData.telegramVerificationEnabled && (
+                <div className="space-y-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="telegramGroupHandle">Telegram Group Handle</Label>
+                    <Input
+                      id="telegramGroupHandle"
+                      value={formData.telegramGroupHandle}
+                      onChange={(e) =>
+                        setFormData({ ...formData, telegramGroupHandle: e.target.value })
+                      }
+                      placeholder="@yourgroup or yourgroup"
+                      required={formData.telegramVerificationEnabled}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      The Telegram group users must be members of to join this circle
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="minMembershipMonths">Minimum Membership (months)</Label>
+                    <Select
+                      value={formData.minMembershipMonths}
+                      onValueChange={(value) =>
+                        setFormData({ ...formData, minMembershipMonths: value })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">1 month</SelectItem>
+                        <SelectItem value="3">3 months</SelectItem>
+                        <SelectItem value="6">6 months</SelectItem>
+                        <SelectItem value="12">12 months</SelectItem>
+                        <SelectItem value="24">24 months</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

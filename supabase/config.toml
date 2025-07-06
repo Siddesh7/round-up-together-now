@@ -1,1 +1,61 @@
+
 project_id = "afqwtkxesmdtljnfrdsa"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[auth]
+enabled = true
+port = 54324
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["https://localhost:3000"]
+jwt_expiry = 3600
+enable_signup = true
+enable_confirmations = false
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+enable_confirmations = false
+
+[db]
+port = 54322
+
+[functions.telegram-verification]
+verify_jwt = true
+
+[studio]
+enabled = true
+port = 54323
+
+[inbucket]
+enabled = true
+port = 54325
+
+[storage]
+enabled = true
+port = 54326
+
+[edge-runtime]
+enabled = true
+port = 54327
+
+[pg_prove]
+enabled = false
+
+[pgbouncer]
+enabled = false
+
+[pooler]
+enabled = false
+
+[realtime]
+enabled = true
+port = 54328
+
+[supabase_edge.functions.telegram-verification]
+import_map = "./supabase/functions/import_map.json"

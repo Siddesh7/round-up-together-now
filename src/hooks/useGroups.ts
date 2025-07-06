@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -15,6 +16,9 @@ export interface Group {
   status: string;
   created_at: string;
   secret_code?: string;
+  telegram_group_handle?: string;
+  telegram_verification_enabled?: boolean;
+  min_membership_months?: number;
 }
 
 export const useGroups = () => {
@@ -103,6 +107,26 @@ export const useGroups = () => {
       if (group.type === "private") {
         if (!secretCode || secretCode !== group.secret_code) {
           throw new Error("Invalid secret code for this private group");
+        }
+      }
+
+      // Check Telegram verification for community groups
+      if (group.type === "community" && group.telegram_verification_enabled) {
+        const { data: verificationData, error: verificationError } = await supabase
+          .from("user_telegram_verification")
+          .select("*")
+          .eq("user_id", user.id)
+          .eq("group_id", groupId)
+          .eq("verification_status", "verified")
+          .single();
+
+        if (verificationError || !verificationData) {
+          throw new Error("Telegram verification required for this community group");
+        }
+
+        // Check if verification is still valid (not expired)
+        if (verificationData.expires_at && new Date(verificationData.expires_at) < new Date()) {
+          throw new Error("Telegram verification has expired. Please verify again.");
         }
       }
 

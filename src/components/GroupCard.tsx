@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Users, CircleDollarSign, Calendar, Shield } from 'lucide-react';
+import { Users, CircleDollarSign, Calendar, Shield, MessageCircle } from 'lucide-react';
 
 interface GroupCardProps {
   group: {
@@ -16,6 +16,8 @@ interface GroupCardProps {
     nextPayout: string;
     description: string;
     verified?: boolean;
+    telegramVerificationEnabled?: boolean;
+    telegramGroupHandle?: string;
   };
   onClick?: () => void;
 }
@@ -50,7 +52,7 @@ export const GroupCard: React.FC<GroupCardProps> = ({ group, onClick }) => {
     >
       <CardHeader className="pb-3">
         <div className="flex justify-between items-start">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <Icon className="w-5 h-5 text-muted-foreground" />
             <Badge className={config.color}>
               {config.label}
@@ -58,6 +60,12 @@ export const GroupCard: React.FC<GroupCardProps> = ({ group, onClick }) => {
             {group.verified && (
               <Badge variant="outline" className="text-success border-success">
                 ✓ Verified
+              </Badge>
+            )}
+            {group.type === 'community' && group.telegramVerificationEnabled && (
+              <Badge variant="outline" className="text-blue-600 border-blue-600 text-xs">
+                <MessageCircle className="w-3 h-3 mr-1" />
+                Telegram
               </Badge>
             )}
           </div>
@@ -70,6 +78,13 @@ export const GroupCard: React.FC<GroupCardProps> = ({ group, onClick }) => {
         <p className="text-muted-foreground text-sm leading-relaxed">
           {group.description}
         </p>
+
+        {/* Telegram Group Info for Community Circles */}
+        {group.type === 'community' && group.telegramVerificationEnabled && group.telegramGroupHandle && (
+          <div className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
+            Requires membership in @{group.telegramGroupHandle}
+          </div>
+        )}
       </CardHeader>
 
       <CardContent className="pt-0">

@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useParams, useSearchParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useGroups } from "@/hooks/useGroups";
 import { supabase } from "@/integrations/supabase/client";
+import { TelegramVerificationModal } from "@/components/TelegramVerificationModal";
 import {
   Users,
   CircleDollarSign,
@@ -19,6 +21,7 @@ import {
   Shield,
   ArrowLeft,
   CheckCircle,
+  MessageCircle,
 } from "lucide-react";
 
 interface GroupDetails {
@@ -32,6 +35,9 @@ interface GroupDetails {
   current_members?: number;
   secret_code?: string;
   next_payout_date: string;
+  telegram_group_handle?: string;
+  telegram_verification_enabled?: boolean;
+  min_membership_months?: number;
 }
 
 const Join = () => {
@@ -48,6 +54,8 @@ const Join = () => {
   const [secretCode, setSecretCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [alreadyMember, setAlreadyMember] = useState(false);
+  const [showTelegramVerification, setShowTelegramVerification] = useState(false);
+  const [telegramVerified, setTelegramVerified] = useState(false);
 
   const codeFromUrl = searchParams.get("code");
 
@@ -106,6 +114,21 @@ const Join = () => {
           if (memberData) {
             setAlreadyMember(true);
           }
+
+          // Check Telegram verification status for community groups
+          if (groupData.type === "community" && groupData.telegram_verification_enabled) {
+            const { data: verificationData } = await supabase
+              .from("user_telegram_verification")
+              .select("*")
+              .eq("user_id", user.id)
+              .eq("group_id", groupId)
+              .eq("verification_status", "verified")
+              .single();
+
+            if (verificationData) {
+              setTelegramVerified(true);
+            }
+          }
         }
       } catch (err) {
         console.error("Error fetching group:", err);
@@ -129,6 +152,12 @@ const Join = () => {
     }
 
     if (!group) return;
+
+    // Check Telegram verification for community groups
+    if (group.type === "community" && group.telegram_verification_enabled && !telegramVerified) {
+      setShowTelegramVerification(true);
+      return;
+    }
 
     if (group.type === "private" && secretCode !== group.secret_code) {
       toast({
@@ -172,6 +201,15 @@ const Join = () => {
       });
     } finally {
       setJoining(false);
+    }
+  };
+
+  const handleTelegramVerificationComplete = (verified: boolean) => {
+    setTelegramVerified(verified);
+    setShowTelegramVerification(false);
+    if (verified) {
+      // Automatically proceed with joining after successful verification
+      setTimeout(() => handleJoin(), 500);
     }
   };
 
@@ -290,6 +328,26 @@ const Join = () => {
                 </div>
               </div>
             </div>
+
+            {/* Telegram Verification Info for Community Groups */}
+            {group.type === "community" && group.telegram_verification_enabled && (
+              <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <MessageCircle className="w-4 h-4 text-blue-600" />
+                  <span className="font-medium text-blue-900">Telegram Verification Required</span>
+                </div>
+                <div className="text-sm text-blue-700 space-y-1">
+                  <p>• Must be a member of: <code>@{group.telegram_group_handle}</code></p>
+                  <p>• Minimum membership: {group.min_membership_months || 6} months</p>
+                  {telegramVerified && (
+                    <div className="flex items-center gap-1 text-green-600 font-medium">
+                      <CheckCircle className="w-4 h-4" />
+                      <span>Telegram verification completed</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Status Messages */}
@@ -357,11 +415,15 @@ const Join = () => {
                     disabled={
                       joining ||
                       !user ||
-                      (group.type === "private" && !secretCode)
+                      (group.type === "private" && !secretCode) ||
+                      (group.type === "community" && group.telegram_verification_enabled && !telegramVerified)
                     }
                     className="flex-1"
                   >
-                    {joining ? "Joining..." : "Join Circle"}
+                    {joining ? "Joining..." : 
+                     group.type === "community" && group.telegram_verification_enabled && !telegramVerified
+                       ? "Verify & Join Circle"
+                       : "Join Circle"}
                   </Button>
 
                   <Button variant="outline" onClick={() => navigate("/")}>
@@ -372,6 +434,19 @@ const Join = () => {
             )}
         </CardContent>
       </Card>
+
+      {/* Telegram Verification Modal */}
+      {group && showTelegramVerification && (
+        <TelegramVerificationModal
+          open={showTelegramVerification}
+          onOpenChange={setShowTelegramVerification}
+          groupId={group.id}
+          groupName={group.name}
+          telegramGroupHandle={group.telegram_group_handle || ""}
+          minMembershipMonths={group.min_membership_months || 6}
+          onVerificationComplete={handleTelegramVerificationComplete}
+        />
+      )}
     </div>
   );
 };

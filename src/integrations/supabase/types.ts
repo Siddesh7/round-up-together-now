@@ -107,11 +107,15 @@ export type Database = {
           description: string | null
           id: string
           max_members: number
+          min_membership_months: number | null
           monthly_amount: number
           name: string
           next_payout_date: string | null
           secret_code: string | null
           status: string | null
+          telegram_group_handle: string | null
+          telegram_verification_criteria: Json | null
+          telegram_verification_enabled: boolean | null
           type: string
           updated_at: string | null
         }
@@ -122,11 +126,15 @@ export type Database = {
           description?: string | null
           id?: string
           max_members: number
+          min_membership_months?: number | null
           monthly_amount: number
           name: string
           next_payout_date?: string | null
           secret_code?: string | null
           status?: string | null
+          telegram_group_handle?: string | null
+          telegram_verification_criteria?: Json | null
+          telegram_verification_enabled?: boolean | null
           type: string
           updated_at?: string | null
         }
@@ -137,11 +145,15 @@ export type Database = {
           description?: string | null
           id?: string
           max_members?: number
+          min_membership_months?: number | null
           monthly_amount?: number
           name?: string
           next_payout_date?: string | null
           secret_code?: string | null
           status?: string | null
+          telegram_group_handle?: string | null
+          telegram_verification_criteria?: Json | null
+          telegram_verification_enabled?: boolean | null
           type?: string
           updated_at?: string | null
         }
@@ -185,6 +197,69 @@ export type Database = {
         }
         Relationships: []
       }
+      user_telegram_verification: {
+        Row: {
+          created_at: string | null
+          expires_at: string | null
+          group_id: string
+          id: string
+          telegram_username: string
+          updated_at: string | null
+          user_id: string
+          verification_attempts: number | null
+          verification_data: Json | null
+          verification_status:
+            | Database["public"]["Enums"]["verification_status"]
+            | null
+          verified_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string | null
+          group_id: string
+          id?: string
+          telegram_username: string
+          updated_at?: string | null
+          user_id: string
+          verification_attempts?: number | null
+          verification_data?: Json | null
+          verification_status?:
+            | Database["public"]["Enums"]["verification_status"]
+            | null
+          verified_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string | null
+          group_id?: string
+          id?: string
+          telegram_username?: string
+          updated_at?: string | null
+          user_id?: string
+          verification_attempts?: number | null
+          verification_data?: Json | null
+          verification_status?:
+            | Database["public"]["Enums"]["verification_status"]
+            | null
+          verified_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_telegram_verification_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_telegram_verification_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -198,7 +273,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      verification_status: "pending" | "verified" | "failed" | "expired"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -313,6 +388,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      verification_status: ["pending", "verified", "failed", "expired"],
+    },
   },
 } as const
