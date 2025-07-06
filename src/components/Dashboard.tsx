@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -108,48 +109,68 @@ export const Dashboard = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 p-4">
       <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="mb-8 flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">
-              Welcome back,{" "}
-              {user.user_metadata?.full_name || user.email?.split("@")[0]}! 👋
-            </h1>
-            <p className="text-muted-foreground">
-              Your savings journey continues with your trusted community
-            </p>
-          </div>
-          <div className="flex items-center gap-4">
-            <NotificationBell />
-            {intmax.address && (
-              <div className="flex items-center gap-4 bg-muted p-2 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <span
-                    className="text-sm font-mono truncate max-w-[150px]"
-                    title={intmax.address}
-                  >
-                    {intmax.address}
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleCopyAddress}
-                  >
-                    <Copy className="w-4 h-4" />
-                  </Button>
+        {/* Enhanced Header */}
+        <div className="mb-8">
+          <Card className="border-0 shadow-lg bg-gradient-to-r from-primary/5 via-background to-accent/5">
+            <CardContent className="p-8">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                {/* Welcome Section */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+                      <span className="text-2xl">👋</span>
+                    </div>
+                    <div>
+                      <h1 className="text-3xl font-bold text-foreground">
+                        Welcome back, {user.user_metadata?.full_name || user.email?.split("@")[0]}!
+                      </h1>
+                      <p className="text-muted-foreground text-lg">
+                        Your savings journey continues with your trusted community
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 border-l border-muted-foreground/20 pl-4">
-                  <Wallet className="w-4 h-4 text-primary" />
-                  <span className="text-sm font-semibold">
-                    {intmax.isBalanceLoading
-                      ? "Loading..."
-                      : intmax.formattedBalance}
-                  </span>
+
+                {/* User Info & Actions */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                  {/* Notification Bell */}
+                  <NotificationBell />
+                  
+                  {/* Wallet Info */}
+                  {intmax.address && (
+                    <Card className="bg-background/80 backdrop-blur-sm border shadow-sm">
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-2">
+                            <Wallet className="w-4 h-4 text-primary" />
+                            <div className="text-sm">
+                              <p className="font-mono text-xs text-muted-foreground truncate max-w-[120px]" title={intmax.address}>
+                                {intmax.address}
+                              </p>
+                              <p className="font-semibold">
+                                {intmax.isBalanceLoading ? "Loading..." : intmax.formattedBalance}
+                              </p>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={handleCopyAddress}
+                              className="h-8 w-8"
+                            >
+                              <Copy className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Auth Button */}
+                  <AuthButton />
                 </div>
               </div>
-            )}
-            <AuthButton />
-          </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Stats Overview */}
