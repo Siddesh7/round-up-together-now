@@ -76,7 +76,18 @@ export const ImprovedCreateGroupModal = ({
     minMembershipMonths: "6",
   });
 
-  const totalSteps = 7;
+  // Calculate total steps based on circle type
+  const getTotalSteps = () => {
+    if (formData.type === "community") {
+      return 7; // 1: Basic info, 2: Type, 3: Telegram, 4: Members, 5: Amount, 6: Payout, 7: Create/Review
+    } else if (formData.type === "private") {
+      return 6; // 1: Basic info, 2: Type, 3: Members, 4: Amount, 5: Payout, 6: Secret code + Create
+    } else {
+      return 6; // 1: Basic info, 2: Type, 3: Members, 4: Amount, 5: Payout, 6: Review + Create
+    }
+  };
+
+  const totalSteps = getTotalSteps();
   const progress = (currentStep / totalSteps) * 100;
 
   const groupTypeConfig = {
@@ -129,6 +140,16 @@ export const ImprovedCreateGroupModal = ({
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
     }
+  };
+
+  // Check if we're on the final step (before success screen)
+  const isFinalStep = () => {
+    return currentStep === totalSteps;
+  };
+
+  // Check if we're on the success screen (after creation)
+  const isSuccessStep = () => {
+    return currentStep === totalSteps + 1;
   };
 
   const handleSubmit = async () => {
@@ -221,7 +242,7 @@ export const ImprovedCreateGroupModal = ({
 
       const link = generateInviteLink(group.id);
       setInviteLink(link);
-      nextStep(); // Move to final step showing invite link
+      setCurrentStep(totalSteps + 1); // Move to success step
 
       toast({ 
         title: "Circle created successfully!",
@@ -279,15 +300,17 @@ export const ImprovedCreateGroupModal = ({
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Create New Savings Circle</DialogTitle>
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm text-muted-foreground">
-              <span>
-                Step {currentStep} of {totalSteps}
-              </span>
-              <span>{Math.round(progress)}% complete</span>
+          {!isSuccessStep() && (
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm text-muted-foreground">
+                <span>
+                  Step {currentStep} of {totalSteps}
+                </span>
+                <span>{Math.round(progress)}% complete</span>
+              </div>
+              <Progress value={progress} className="h-2" />
             </div>
-            <Progress value={progress} className="h-2" />
-          </div>
+          )}
         </DialogHeader>
 
         <div className="space-y-6">
@@ -383,7 +406,7 @@ export const ImprovedCreateGroupModal = ({
             </div>
           )}
 
-          {/* Step 3: Telegram Verification (for community groups) */}
+          {/* Step 3: Telegram Verification (for community groups only) */}
           {currentStep === 3 && formData.type === "community" && (
             <div className="space-y-4">
               <div className="text-center mb-4">
@@ -452,8 +475,9 @@ export const ImprovedCreateGroupModal = ({
             </div>
           )}
 
-          {/* Step 3 or 4: Member Limit */}
-          {currentStep === (formData.type === "community" ? 4 : 3) && (
+          {/* Member Limit Step */}
+          {((formData.type === "community" && currentStep === 4) || 
+            (formData.type !== "community" && currentStep === 3)) && (
             <div className="space-y-4">
               <div className="text-center mb-4">
                 <h3 className="text-lg font-semibold">Set member limit</h3>
@@ -499,8 +523,9 @@ export const ImprovedCreateGroupModal = ({
             </div>
           )}
 
-          {/* Step 4 or 5: Monthly Contribution */}
-          {currentStep === (formData.type === "community" ? 5 : 4) && (
+          {/* Monthly Contribution Step */}
+          {((formData.type === "community" && currentStep === 5) || 
+            (formData.type !== "community" && currentStep === 4)) && (
             <div className="space-y-4">
               <div className="text-center mb-4">
                 <h3 className="text-lg font-semibold">
@@ -542,8 +567,9 @@ export const ImprovedCreateGroupModal = ({
             </div>
           )}
 
-          {/* Step 5 or 6: Payout Order Rules */}
-          {currentStep === (formData.type === "community" ? 6 : 5) && (
+          {/* Payout Order Step */}
+          {((formData.type === "community" && currentStep === 6) || 
+            (formData.type !== "community" && currentStep === 5)) && (
             <div className="space-y-4">
               <div className="text-center mb-4">
                 <h3 className="text-lg font-semibold">Payout order</h3>
@@ -608,8 +634,8 @@ export const ImprovedCreateGroupModal = ({
             </div>
           )}
 
-          {/* Step 6 or 7: Secret Code (for private groups) or Confirmation */}
-          {currentStep === (formData.type === "community" ? 7 : 6) && (
+          {/* Final Step: Secret Code (for private) or Review */}
+          {isFinalStep() && (
             <div className="space-y-4">
               {formData.type === "private" ? (
                 <>
@@ -699,8 +725,8 @@ export const ImprovedCreateGroupModal = ({
             </div>
           )}
 
-          {/* Step 7: Invite Link (after creation) */}
-          {currentStep === 7 && (
+          {/* Success Step: Invite Link (after creation) */}
+          {isSuccessStep() && (
             <div className="space-y-4">
               <div className="text-center mb-4">
                 <h3 className="text-lg font-semibold">Circle created! 🎉</h3>
@@ -742,8 +768,8 @@ export const ImprovedCreateGroupModal = ({
             </div>
           )}
 
-          {/* Navigation - Only show when not on final step */}
-          {currentStep < 7 && (
+          {/* Navigation - Only show when not on success step */}
+          {!isSuccessStep() && (
             <div className="flex justify-between pt-4">
               <Button
                 variant="outline"
@@ -754,7 +780,7 @@ export const ImprovedCreateGroupModal = ({
                 Back
               </Button>
 
-              {currentStep < (formData.type === "community" ? 7 : 6) && (
+              {!isFinalStep() && (
                 <Button
                   onClick={nextStep}
                   disabled={
@@ -762,8 +788,10 @@ export const ImprovedCreateGroupModal = ({
                       (!formData.name || !formData.description)) ||
                     (currentStep === 3 && formData.type === "community" && 
                       formData.telegramVerificationEnabled && !formData.telegramGroupHandle) ||
-                    (currentStep === (formData.type === "community" ? 4 : 3) && !formData.maxMembers) ||
-                    (currentStep === (formData.type === "community" ? 5 : 4) && !formData.monthlyAmount)
+                    ((formData.type === "community" && currentStep === 4) || 
+                     (formData.type !== "community" && currentStep === 3)) && !formData.maxMembers ||
+                    ((formData.type === "community" && currentStep === 5) || 
+                     (formData.type !== "community" && currentStep === 4)) && !formData.monthlyAmount
                   }
                 >
                   Next
@@ -771,7 +799,7 @@ export const ImprovedCreateGroupModal = ({
                 </Button>
               )}
 
-              {currentStep === (formData.type === "community" ? 7 : 6) && (
+              {isFinalStep() && (
                 <Button
                   onClick={handleSubmit}
                   disabled={
