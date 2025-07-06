@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useGroups } from "@/hooks/useGroups";
@@ -21,6 +21,9 @@ import {
   ArrowLeft,
   CheckCircle,
   MessageCircle,
+  NotificationBell,
+  AuthButton,
+  AlertCircle,
 } from "lucide-react";
 
 interface GroupDetails {
@@ -276,184 +279,255 @@ const Join = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5 flex items-center justify-center p-4">
-      <Card className="max-w-2xl w-full">
-        <CardHeader className="text-center">
-          <div className="flex items-center justify-center space-x-2 mb-2">
-            <CircleDollarSign className="w-6 h-6 text-primary" />
-            <CardTitle className="text-2xl">Join Savings Circle</CardTitle>
-          </div>
-          {getGroupTypeBadge(group.type)}
-        </CardHeader>
-
-        <CardContent className="space-y-6">
-          {/* Group Information */}
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-xl font-semibold">{group.name}</h3>
-              <p className="text-muted-foreground mt-1">{group.description}</p>
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
+      {/* Enhanced Header */}
+      <div className="bg-white/80 backdrop-blur-sm border-b border-border/50 sticky top-0 z-10">
+        <div className="max-w-4xl mx-auto px-4 py-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate("/dashboard")}
+                className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back to Dashboard
+              </Button>
+            </div>
+            
+            <div className="text-center flex-1 mx-8">
+              <div className="flex items-center justify-center gap-3 mb-2">
+                <div className="p-2 bg-primary/10 rounded-full">
+                  <Users className="w-6 h-6 text-primary" />
+                </div>
+                <h1 className="text-2xl font-bold text-foreground">
+                  Join Savings Circle
+                </h1>
+              </div>
+              <p className="text-muted-foreground text-sm">
+                Review circle details and become a member
+              </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex items-center space-x-2">
-                <CircleDollarSign className="w-4 h-4 text-primary" />
-                <div>
-                  <p className="text-sm text-muted-foreground">
-                    Monthly Amount
-                  </p>
-                  <p className="font-semibold">
-                    {(group.monthly_amount / 1e18).toFixed(7)} ETH
-                  </p>
+            <div className="flex items-center gap-4">
+              <NotificationBell />
+              <AuthButton />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="max-w-2xl mx-auto p-6">
+        {/* Already Member Alert */}
+        {alreadyMember && (
+          <Alert className="mb-6 border-success/20 bg-success/5">
+            <CheckCircle className="h-4 w-4 text-success" />
+            <AlertTitle className="text-success">Already a Member!</AlertTitle>
+            <AlertDescription className="text-success/80">
+              You're already part of this savings circle. Visit your dashboard to manage your contributions and view circle details.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Group Full Alert */}
+        {(group.current_members || 0) >= group.max_members && !alreadyMember && (
+          <Alert className="mb-6 border-warm-orange/20 bg-warm-orange/5">
+            <AlertCircle className="h-4 w-4 text-warm-orange" />
+            <AlertTitle className="text-warm-orange">Circle Full</AlertTitle>
+            <AlertDescription className="text-warm-orange/80">
+              This savings circle has reached its maximum capacity of {group.max_members} members.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Main Group Card */}
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-card to-card/50">
+          <CardHeader className="text-center">
+            <div className="flex items-center justify-center space-x-2 mb-2">
+              <CircleDollarSign className="w-6 h-6 text-primary" />
+              <CardTitle className="text-2xl">Join Savings Circle</CardTitle>
+            </div>
+            {getGroupTypeBadge(group.type)}
+          </CardHeader>
+
+          <CardContent className="space-y-6">
+            {/* Group Information */}
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-xl font-semibold">{group.name}</h3>
+                <p className="text-muted-foreground mt-1">{group.description}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex items-center space-x-2">
+                  <CircleDollarSign className="w-4 h-4 text-primary" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">
+                      Monthly Amount
+                    </p>
+                    <p className="font-semibold">
+                      {(group.monthly_amount / 1e18).toFixed(7)} ETH
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Users className="w-4 h-4 text-primary" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Members</p>
+                    <p className="font-semibold">
+                      {group.current_members || 0} / {group.max_members}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2 col-span-2">
+                  <Calendar className="w-4 h-4 text-primary" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Next Payout</p>
+                    <p className="font-semibold">
+                      {new Date(group.next_payout_date).toLocaleDateString()}
+                    </p>
+                  </div>
                 </div>
               </div>
 
-              <div className="flex items-center space-x-2">
-                <Users className="w-4 h-4 text-primary" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Members</p>
-                  <p className="font-semibold">
-                    {group.current_members || 0} / {group.max_members}
-                  </p>
+              {/* Telegram Verification Alert */}
+              {group.telegram_verification_enabled && 
+               group.telegram_group_handle && 
+               !alreadyMember &&
+               (group.current_members || 0) < group.max_members && (
+                <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <MessageCircle className="w-4 h-4 text-blue-600" />
+                    <span className="font-medium text-blue-900">Telegram Verification Required</span>
+                  </div>
+                  <div className="text-sm text-blue-700 space-y-1">
+                    <p>• Must be a member of: <code>@{group.telegram_group_handle}</code></p>
+                    <p>• Minimum membership: {group.min_membership_months || 6} months</p>
+                    {telegramVerified && (
+                      <div className="flex items-center gap-1 text-green-600 font-medium">
+                        <CheckCircle className="w-4 h-4" />
+                        <span>Telegram verification completed</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-
-              <div className="flex items-center space-x-2 col-span-2">
-                <Calendar className="w-4 h-4 text-primary" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Next Payout</p>
-                  <p className="font-semibold">
-                    {new Date(group.next_payout_date).toLocaleDateString()}
-                  </p>
-                </div>
-              </div>
+              )}
             </div>
 
-            {/* Telegram Verification Info for Community Groups */}
-            {group.type === "community" && group.telegram_verification_enabled && (
-              <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
-                <div className="flex items-center gap-2 mb-2">
-                  <MessageCircle className="w-4 h-4 text-blue-600" />
-                  <span className="font-medium text-blue-900">Telegram Verification Required</span>
-                </div>
-                <div className="text-sm text-blue-700 space-y-1">
-                  <p>• Must be a member of: <code>@{group.telegram_group_handle}</code></p>
-                  <p>• Minimum membership: {group.min_membership_months || 6} months</p>
-                  {telegramVerified && (
-                    <div className="flex items-center gap-1 text-green-600 font-medium">
-                      <CheckCircle className="w-4 h-4" />
-                      <span>Telegram verification completed</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Status Messages */}
-          {alreadyMember && (
-            <Alert>
-              <CheckCircle className="h-4 w-4" />
-              <AlertDescription>
-                You're already a member of this savings circle!
-                <Button
-                  variant="link"
-                  className="p-0 ml-1 h-auto"
-                  onClick={() => navigate("/dashboard")}
-                >
-                  Go to Dashboard
-                </Button>
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {(group.current_members || 0) >= group.max_members &&
-            !alreadyMember && (
-              <Alert variant="destructive">
+            {/* Status Messages */}
+            {alreadyMember && (
+              <Alert>
+                <CheckCircle className="h-4 w-4" />
                 <AlertDescription>
-                  This savings circle has reached its maximum capacity and is no
-                  longer accepting new members.
+                  You're already a member of this savings circle!
+                  <Button
+                    variant="link"
+                    className="p-0 ml-1 h-auto"
+                    onClick={() => navigate("/dashboard")}
+                  >
+                    Go to Dashboard
+                  </Button>
                 </AlertDescription>
               </Alert>
             )}
 
-          {/* Private Group Secret Code - Only show if not already a member */}
-          {group.type === "private" &&
-            !alreadyMember &&
-            (group.current_members || 0) < group.max_members && (
-              <div className="space-y-2">
-                <Label htmlFor="secretCode">Secret Code</Label>
-                <Input
-                  id="secretCode"
-                  type="password"
-                  placeholder="Enter the secret code"
-                  value={secretCode}
-                  onChange={(e) => setSecretCode(e.target.value)}
-                />
-                <p className="text-sm text-muted-foreground">
-                  This is a private circle. You need the secret code to join.
-                </p>
-              </div>
-            )}
+            {(group.current_members || 0) >= group.max_members &&
+              !alreadyMember && (
+                <Alert variant="destructive">
+                  <AlertDescription>
+                    This savings circle has reached its maximum capacity and is no
+                    longer accepting new members.
+                  </AlertDescription>
+                </Alert>
+              )}
 
-          {/* Join Button - Only show if not already a member and group is not full */}
-          {!alreadyMember &&
-            (group.current_members || 0) < group.max_members && (
-              <div className="space-y-4">
-                {!user && (
-                  <Alert>
-                    <AlertDescription>
-                      You need to sign in before you can join this savings
-                      circle.
-                    </AlertDescription>
-                  </Alert>
-                )}
-
-                <div className="flex space-x-2">
-                  <Button
-                    onClick={handleJoin}
-                    disabled={
-                      joining ||
-                      !user ||
-                      (group.type === "private" && !secretCode)
-                    }
-                    className="flex-1"
-                  >
-                    {joining ? "Joining..." : 
-                     group.type === "community" && group.telegram_verification_enabled && !telegramVerified
-                       ? "Verify & Join Circle"
-                       : "Join Circle"}
-                  </Button>
-
-                  <Button variant="outline" onClick={() => navigate("/")}>
-                    Cancel
-                  </Button>
+            {/* Private Group Secret Code - Only show if not already a member */}
+            {group.type === "private" &&
+              !alreadyMember &&
+              (group.current_members || 0) < group.max_members && (
+                <div className="space-y-2">
+                  <Label htmlFor="secretCode">Secret Code</Label>
+                  <Input
+                    id="secretCode"
+                    type="password"
+                    placeholder="Enter the secret code"
+                    value={secretCode}
+                    onChange={(e) => setSecretCode(e.target.value)}
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    This is a private circle. You need the secret code to join.
+                  </p>
                 </div>
+              )}
+
+            {/* Join Button - Only show if not already a member and group is not full */}
+            {!alreadyMember &&
+              (group.current_members || 0) < group.max_members && (
+                <div className="space-y-4">
+                  {!user && (
+                    <Alert>
+                      <AlertDescription>
+                        You need to sign in before you can join this savings
+                        circle.
+                      </AlertDescription>
+                    </Alert>
+                  )}
+
+                  <div className="flex space-x-2">
+                    <Button
+                      onClick={handleJoin}
+                      disabled={
+                        joining ||
+                        !user ||
+                        (group.type === "private" && !secretCode)
+                      }
+                      className="flex-1"
+                    >
+                      {joining ? "Joining..." : 
+                       group.type === "community" && group.telegram_verification_enabled && !telegramVerified
+                         ? "Verify & Join Circle"
+                         : "Join Circle"}
+                    </Button>
+
+                    <Button variant="outline" onClick={() => navigate("/")}>
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+            {/* Show back to dashboard button if already a member */}
+            {alreadyMember && (
+              <div className="flex justify-center">
+                <Button 
+                  onClick={() => navigate("/dashboard")} 
+                  className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Go to Dashboard
+                </Button>
               </div>
             )}
+          </CardContent>
+        </Card>
 
-          {/* Show back to dashboard button if already a member */}
-          {alreadyMember && (
-            <div className="flex justify-center">
-              <Button onClick={() => navigate("/dashboard")} className="w-full">
-                Go to Dashboard
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Telegram Verification Modal */}
-      {group && showTelegramVerification && (
-        <TelegramVerificationModal
-          open={showTelegramVerification}
-          onOpenChange={setShowTelegramVerification}
-          groupId={group.id}
-          groupName={group.name}
-          telegramGroupHandle={group.telegram_group_handle || ""}
-          minMembershipMonths={group.min_membership_months || 6}
-          onVerificationComplete={handleTelegramVerificationComplete}
-        />
-      )}
+        {/* Telegram Verification Modal */}
+        {group && showTelegramVerification && (
+          <TelegramVerificationModal
+            open={showTelegramVerification}
+            onOpenChange={setShowTelegramVerification}
+            groupId={group.id}
+            groupName={group.name}
+            telegramGroupHandle={group.telegram_group_handle || ""}
+            minMembershipMonths={group.min_membership_months || 6}
+            onVerificationComplete={handleTelegramVerificationComplete}
+          />
+        )}
+      </div>
     </div>
   );
 };
