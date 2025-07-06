@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams, useSearchParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -125,7 +124,7 @@ const Join = () => {
               .eq("verification_status", "verified")
               .single();
 
-            if (verificationData) {
+            if (verificationData && verificationData.expires_at && new Date(verificationData.expires_at) > new Date()) {
               setTelegramVerified(true);
             }
           }
@@ -415,8 +414,7 @@ const Join = () => {
                     disabled={
                       joining ||
                       !user ||
-                      (group.type === "private" && !secretCode) ||
-                      (group.type === "community" && group.telegram_verification_enabled && !telegramVerified)
+                      (group.type === "private" && !secretCode)
                     }
                     className="flex-1"
                   >
