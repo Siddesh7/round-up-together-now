@@ -1,175 +1,127 @@
-# Community Chit Fund App - Hackathon MVP
+# openpot 🤝
 
-A modern platform for organizing group-based savings (chit funds), where members contribute monthly and one member receives the pooled amount in turn. Built for hackathon scope with a focus on treasury protection, group dynamics, and user experience.
+A modern group savings platform that brings people together to save money collectively, powered by blockchain technology for transparency and security.
 
-## 🎯 Product Overview
+## What is openpot?
 
-This app implements a **focused, cleaned-up MVP** for community chit funds with three group types:
+openpot is a digital chit fund application that makes group savings simple, secure, and transparent. Whether you're saving for a vacation with friends, planning a group purchase, or organizing a community fund, our platform helps you pool resources and achieve your financial goals together.
 
-- **Private Groups** — invite-only among trusted people
-- **Public Groups** — open to anyone with contribution caps
-- **Community Groups** — for vetted community members (e.g., Discord-verified)
+## How It Works
 
-## 🏦 Treasury Model
+### 1. Create or Join a Group
 
-- **First month contributions** go directly to a **treasury** (protocol reserve) to build confidence and provide initial stability
-- From the **second month onward**, participants can begin to claim the pooled pot
-- Members who claim later (e.g., 10th month) receive **interest on their pot** — fixed at 7% for demonstration
+- **Create a Group**: Set up a new savings group with your friends, family, or community
+- **Join Existing Groups**: Find and join groups that match your savings goals
+- **Set Group Rules**: Define contribution amounts, payout schedules, and group objectives
 
-**Example**: If a participant claims the 10th month, they get the pooled pot plus 7% extra.
+### 2. Make Contributions
 
-## ✨ Core Features
+- **Regular Contributions**: Make scheduled payments to your group's fund
+- **Flexible Amounts**: Contribute what you can afford based on group agreements
+- **Automatic Tracking**: All contributions are automatically recorded and tracked
 
-### 🚀 User Flows
+### 3. Receive Payouts
 
-1. **Onboarding** - Brief welcome with chit fund explanation and profile creation
-2. **Home Dashboard** - Welcome header with Create Group and Join Group actions, plus featured groups list
-3. **Join Group** - Choose from static list, see details, validate Community Group membership via Discord
-4. **Create Group** - Step-by-step wizard with progress bar for all group settings
-5. **Group Dashboard** - Member profiles, progress tracking, payout schedule, simple chat, contribution flow
-6. **Payments** - Contribution flow with payment confirmation and payout receipts
-7. **Notifications** - Reminders for contributions, payout alerts, group messages
-8. **Profile & Account** - Contribution history, payouts received, basic settings
+- **Scheduled Distributions**: Receive your turn at the agreed-upon time
+- **Transparent Process**: All payouts are visible to group members
+- **Secure Transfers**: Money is transferred directly to your wallet
 
-### 🛠 Technical Features
+## Key Features
 
-- **Treasury Logic** - First month contributions automatically go to treasury
-- **Interest Calculation** - Later recipients earn up to 7% interest (mock for demo)
-- **Group Management** - Create, join, and manage different circle types
-- **Real-time Chat** - Simple group messaging system
-- **Notification System** - Contextual alerts and reminders
-- **Payment Flow** - Mock payment processing with status tracking
-- **Responsive Design** - Modern UI with Tailwind CSS and shadcn components
+### 🔐 Secure & Transparent
 
-## 🏗 Tech Stack
+- All transactions are recorded on the blockchain
+- Smart contracts ensure automatic and fair payouts
+- No central authority controls your funds
 
-- **Frontend**: React 18, TypeScript, Next.js 15
-- **Styling**: Tailwind CSS v4, shadcn/ui components
-- **Backend**: Supabase (Database & Auth)
-- **State Management**: React Query (TanStack Query)
-- **Routing**: React Router DOM
-- **Icons**: Lucide React
-- **Package Manager**: pnpm
+### 💰 Flexible Savings
 
-## 🚀 Getting Started
+- Choose from different group sizes and contribution amounts
+- Set your own savings goals and timelines
+- Join multiple groups for different purposes
 
-### Prerequisites
+### 👥 Community Driven
 
-- Node.js (v18+)
-- pnpm (recommended) or npm
+- Build trust with friends and family
+- Create accountability through group participation
+- Share financial goals and achievements
 
-### Installation
+### 📱 Easy to Use
 
-```bash
-# Clone the repository
-git clone <your-repo-url>
-cd round-up-together-now
+- Simple, intuitive interface
+- Real-time balance and transaction tracking
+- Notifications for important group events
 
-# Install dependencies
-pnpm install
+## Powered by Advanced Technology
 
-# Start development server
-pnpm run dev
-```
+### INTMAX Integration
 
-### Environment Setup
+We use **INTMAX** for fast, secure, and cost-effective transactions:
 
-The app uses Supabase for backend services. The configuration is already set up in the project.
+- **Instant Deposits**: Add money to your group fund instantly
+- **Low Fees**: Minimal transaction costs for all operations
+- **Secure Wallets**: Your funds are protected by enterprise-grade security
+- **Easy Transfers**: Send and receive money with just a few clicks
 
-## 📁 Project Structure
+### Flare Network & Self Protocol
 
-```
-src/
-├── components/           # React components
-│   ├── ui/              # shadcn/ui components
-│   ├── Dashboard.tsx    # Main dashboard
-│   ├── GroupDashboard.tsx    # Individual group view
-│   ├── ContributionCard.tsx  # Payment interface
-│   ├── NotificationBell.tsx  # Notification system
-│   └── ...
-├── hooks/               # Custom React hooks
-│   ├── useAuth.tsx      # Authentication
-│   ├── useGroups.ts     # Group management
-│   └── useNotifications.ts   # Notification system
-├── constants/           # App constants
-│   ├── treasury.ts      # Treasury logic & calculations
-│   └── notifications.ts # Notification templates
-├── integrations/        # External integrations
-│   └── supabase/       # Supabase client & types
-└── pages/              # Route pages
-```
+Built on **Flare Network** with **Self Protocol** for enhanced functionality:
 
-## 🎨 Design System
+- **Data Verification**: Real-time verification of external data through Flare Data Connector (FDC)
+- **Cross-Chain Compatibility**: Interact with multiple blockchain networks
+- **Decentralized Oracle**: Access to reliable, tamper-proof data feeds
+- **Smart Contract Automation**: Automated processes that execute without human intervention
 
-The app uses a cohesive design system with:
+## Getting Started
 
-- **Custom Colors**: Primary green, trust blue, warm orange
-- **Consistent Typography**: Inter font family
-- **Component Library**: shadcn/ui with custom styling
-- **Gradient Effects**: Beautiful gradients for call-to-action elements
-- **Glass Effects**: Modern backdrop blur effects
+### For First-Time Users
 
-## 🔧 Key Components
+1. **Connect Your Wallet**: Link your INTMAX wallet to get started
+2. **Verify Your Identity**: Complete the simple verification process
+3. **Explore Groups**: Browse available groups or create your own
+4. **Start Saving**: Make your first contribution and begin your savings journey
 
-### Treasury Calculations
+### For Group Organizers
 
-```typescript
-// Calculate interest for later recipients
-const calculatePayoutAmount = (
-  monthlyContribution: number,
-  totalMembers: number,
-  payoutMonth: number
-): number => {
-  const basePot = monthlyContribution * totalMembers;
-  const interestAmount = calculateInterestAmount(basePot, payoutMonth);
-  return basePot + interestAmount;
-};
-```
+1. **Set Up Your Group**: Define the group size, contribution amount, and schedule
+2. **Invite Members**: Share your group with friends, family, or community
+3. **Manage Contributions**: Track member contributions and send reminders
+4. **Distribute Funds**: Ensure fair and timely payouts to all members
 
-### Group Types
+## Why Choose openpot?
 
-- **Private**: Requires secret code, invite-only
-- **Public**: Open joining with member limits
-- **Community**: Verified members only (mock Discord integration)
+- **No Hidden Fees**: Transparent pricing with minimal transaction costs
+- **Community First**: Built for groups, by people who understand group dynamics
+- **Blockchain Security**: Your funds are protected by cutting-edge technology
+- **Global Access**: Use the platform from anywhere in the world
+- **24/7 Support**: Our community and support team are always here to help
 
-### Notification System
+## Use Cases
 
-- Real-time notifications for contributions, payouts, and group activities
-- Contextual badges and alerts
-- Persistent notification history
+### Personal Savings
 
-## 🚧 Hackathon Scope
+- **Emergency Fund**: Build a safety net with trusted friends
+- **Vacation Fund**: Save for group trips and adventures
+- **Gift Fund**: Pool money for special occasions and celebrations
 
-**What's Included:**
-✅ Complete UI/UX for all user flows  
-✅ Treasury model with interest calculations  
-✅ Group creation and management  
-✅ Payment flow (mock processing)  
-✅ Notification system  
-✅ Profile management  
-✅ Responsive design
+### Business & Organizations
 
-**Simplified for Demo:**
-⚡ Mock payment processing (no real payments)  
-⚡ Mock Discord verification  
-⚡ Fixed 7% interest rate  
-⚡ In-memory notifications (no persistent storage)  
-⚡ Basic chat without real-time sync
+- **Team Building**: Organize workplace savings groups
+- **Community Projects**: Fund local initiatives and improvements
+- **Educational Savings**: Save for courses, training, or equipment
 
-## 🎯 Future Enhancements
+### Family & Friends
 
-- Real payment integration (Stripe, etc.)
-- Discord OAuth for community verification
-- Advanced interest calculation algorithms
-- Real-time chat with WebSockets
-- Mobile app with React Native
-- Advanced analytics and reporting
-- Integration with DeFi protocols
+- **Wedding Fund**: Save for your special day together
+- **Home Improvement**: Pool resources for family projects
+- **Children's Future**: Create education or milestone funds
 
-## 📄 License
+## Join the Movement
 
-MIT License - see LICENSE file for details.
+Ready to start saving together? Join thousands of users who are already building their financial future with openpot.
+
+**Start your group savings journey today with openpot!**
 
 ---
 
-Built with ❤️ for the hackathon. This MVP demonstrates the core concepts of modern chit fund management with a focus on user experience and community trust.
+_openpot - Where community meets financial empowerment_
