@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import {
   Dialog,
@@ -743,46 +742,48 @@ export const ImprovedCreateGroupModal = ({
             </div>
           )}
 
-          {/* Navigation */}
-          <div className="flex justify-between pt-4">
-            <Button
-              variant="outline"
-              onClick={prevStep}
-              disabled={currentStep === 1}
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
-            </Button>
-
-            {currentStep < (formData.type === "community" ? 7 : 6) && (
+          {/* Navigation - Only show when not on final step */}
+          {currentStep < 7 && (
+            <div className="flex justify-between pt-4">
               <Button
-                onClick={nextStep}
-                disabled={
-                  (currentStep === 1 &&
-                    (!formData.name || !formData.description)) ||
-                  (currentStep === 3 && formData.type === "community" && 
-                    formData.telegramVerificationEnabled && !formData.telegramGroupHandle) ||
-                  (currentStep === (formData.type === "community" ? 4 : 3) && !formData.maxMembers) ||
-                  (currentStep === (formData.type === "community" ? 5 : 4) && !formData.monthlyAmount)
-                }
+                variant="outline"
+                onClick={prevStep}
+                disabled={currentStep === 1}
               >
-                Next
-                <ArrowRight className="w-4 h-4 ml-2" />
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back
               </Button>
-            )}
 
-            {currentStep === (formData.type === "community" ? 7 : 6) && (
-              <Button
-                onClick={handleSubmit}
-                disabled={
-                  loading ||
-                  (formData.type === "private" && !formData.secretCode)
-                }
-              >
-                {loading ? "Creating..." : "Create Circle"}
-              </Button>
-            )}
-          </div>
+              {currentStep < (formData.type === "community" ? 7 : 6) && (
+                <Button
+                  onClick={nextStep}
+                  disabled={
+                    (currentStep === 1 &&
+                      (!formData.name || !formData.description)) ||
+                    (currentStep === 3 && formData.type === "community" && 
+                      formData.telegramVerificationEnabled && !formData.telegramGroupHandle) ||
+                    (currentStep === (formData.type === "community" ? 4 : 3) && !formData.maxMembers) ||
+                    (currentStep === (formData.type === "community" ? 5 : 4) && !formData.monthlyAmount)
+                  }
+                >
+                  Next
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              )}
+
+              {currentStep === (formData.type === "community" ? 7 : 6) && (
+                <Button
+                  onClick={handleSubmit}
+                  disabled={
+                    loading ||
+                    (formData.type === "private" && !formData.secretCode)
+                  }
+                >
+                  {loading ? "Creating..." : "Create Circle"}
+                </Button>
+              )}
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>
