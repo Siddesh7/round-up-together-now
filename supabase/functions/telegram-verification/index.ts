@@ -76,35 +76,61 @@ serve(async (req) => {
 
     const minMonths = groupData.min_membership_months || 6
 
-    // Clean group handle (remove @ if present)
+    // Clean username and group handle
+    const cleanUsername = telegram_username.replace('@', '')
     const cleanGroupHandle = telegram_group_handle.replace('@', '')
     
-    // Check if user is member of the Telegram group
     try {
-      const telegramApiUrl = `https://api.telegram.org/bot${telegramToken}/getChatMember`
-      const response = await fetch(telegramApiUrl, {
+      // First, try to get user info by username to get their user ID
+      const getUserUrl = `https://api.telegram.org/bot${telegramToken}/getChat`
+      const userResponse = await fetch(getUserUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: `@${cleanUsername}`
+        })
+      })
+
+      const userResult = await userResponse.json()
+      console.log('Get user response:', userResult)
+
+      if (!userResult.ok) {
+        return new Response(
+          JSON.stringify({ 
+            verified: false, 
+            reason: 'Telegram username not found. Please check your username and ensure it is publicly visible.' 
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
+      const telegramUserId = userResult.result.id
+
+      // Now check if this user is a member of the group
+      const getChatMemberUrl = `https://api.telegram.org/bot${telegramToken}/getChatMember`
+      const memberResponse = await fetch(getChatMemberUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           chat_id: `@${cleanGroupHandle}`,
-          user_id: telegram_username // This should actually be telegram user ID, not username
+          user_id: telegramUserId
         })
       })
 
-      const telegramResponse = await response.json()
-      console.log('Telegram API response:', telegramResponse)
+      const memberResult = await memberResponse.json()
+      console.log('Get chat member response:', memberResult)
 
-      if (!telegramResponse.ok) {
+      if (!memberResult.ok) {
         // Handle specific Telegram API errors
-        if (telegramResponse.error_code === 400) {
+        if (memberResult.error_code === 400) {
           return new Response(
             JSON.stringify({ 
               verified: false, 
-              reason: 'User not found in Telegram group or invalid username. Please check your Telegram username and ensure you are a member of the group.' 
+              reason: 'User not found in Telegram group. Please ensure you are a member of the group and your username is correct.' 
             }),
             { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           )
-        } else if (telegramResponse.error_code === 403) {
+        } else if (memberResult.error_code === 403) {
           return new Response(
             JSON.stringify({ 
               verified: false, 
@@ -116,14 +142,14 @@ serve(async (req) => {
           return new Response(
             JSON.stringify({ 
               verified: false, 
-              reason: `Telegram verification failed: ${telegramResponse.description}` 
+              reason: `Telegram verification failed: ${memberResult.description}` 
             }),
             { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           )
         }
       }
 
-      const memberData = telegramResponse.result
+      const memberData = memberResult.result
       const memberStatus = memberData.status
 
       // Check if user is an active member (not left, kicked, or restricted)
@@ -154,10 +180,12 @@ serve(async (req) => {
 
       // Store verification result
       const verificationData = {
-        telegram_response: telegramResponse,
+        telegram_user_response: userResult,
+        telegram_member_response: memberResult,
         verified_at: new Date().toISOString(),
         membership_duration_check: membershipValid,
-        member_status: memberStatus
+        member_status: memberStatus,
+        telegram_user_id: telegramUserId
       }
 
       const verificationStatus = membershipValid ? 'verified' : 'failed'
@@ -169,7 +197,7 @@ serve(async (req) => {
         .upsert({
           user_id,
           group_id,
-          telegram_username,
+          telegram_username: cleanUsername,
           verification_status: verificationStatus,
           verified_at: verifiedAt,
           verification_data: verificationData,
@@ -188,7 +216,8 @@ serve(async (req) => {
           reason: membershipValid ? 'Verification successful!' : membershipReason,
           data: {
             member_status: memberStatus,
-            join_date: memberData.date ? new Date(memberData.date * 1000).toISOString() : null
+            join_date: memberData.date ? new Date(memberData.date * 1000).toISOString() : null,
+            telegram_user_id: telegramUserId
           }
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -203,7 +232,7 @@ serve(async (req) => {
         .upsert({
           user_id,
           group_id,
-          telegram_username,
+          telegram_username: cleanUsername,
           verification_status: 'failed',
           verification_data: { error: telegramError.message },
           verification_attempts: 1
