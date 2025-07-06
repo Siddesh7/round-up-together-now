@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import {
   Dialog,
@@ -20,6 +21,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
 import {
   Plus,
   ArrowLeft,
@@ -29,12 +31,12 @@ import {
   Users,
   Shield,
   Globe,
+  MessageCircle,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { TREASURY_CONFIG } from "@/constants/treasury";
-import { parseEther } from "viem";
 
 interface CreateGroupFormData {
   name: string;
@@ -44,6 +46,9 @@ interface CreateGroupFormData {
   maxMembers: string;
   payoutOrder: "sequential" | "random" | "bidding";
   secretCode: string;
+  telegramGroupHandle: string;
+  telegramVerificationEnabled: boolean;
+  minMembershipMonths: string;
 }
 
 export const ImprovedCreateGroupModal = ({
@@ -67,6 +72,9 @@ export const ImprovedCreateGroupModal = ({
     maxMembers: "",
     payoutOrder: "sequential",
     secretCode: "",
+    telegramGroupHandle: "",
+    telegramVerificationEnabled: false,
+    minMembershipMonths: "6",
   });
 
   const totalSteps = 7;
@@ -143,23 +151,37 @@ export const ImprovedCreateGroupModal = ({
       return;
     }
 
+    // Validate community group Telegram settings
+    if (formData.type === "community" && formData.telegramVerificationEnabled) {
+      if (!formData.telegramGroupHandle || formData.telegramGroupHandle.trim() === "") {
+        toast({
+          title: "Telegram group required",
+          description: "Please specify the Telegram group handle for verification",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Validate Telegram handle format
+      const telegramHandle = formData.telegramGroupHandle.trim();
+      if (!telegramHandle.match(/^@?[a-zA-Z][a-zA-Z0-9_]{4,31}$/)) {
+        toast({
+          title: "Invalid Telegram handle",
+          description: "Telegram handle should be 5-32 characters, starting with a letter",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     setLoading(true);
     try {
-      const groupData: {
-        name: string;
-        description: string;
-        type: string;
-        creator_id: string;
-        monthly_amount: string;
-        max_members: number;
-        next_payout_date: string;
-        secret_code?: string;
-      } = {
+      const groupData: any = {
         name: formData.name,
         description: formData.description,
         type: formData.type,
         creator_id: user.id,
-        monthly_amount: parseEther(formData.monthlyAmount).toString(),
+        monthly_amount: Math.round(parseFloat(formData.monthlyAmount) * 1e18), // Convert to wei as number
         max_members: parseInt(formData.maxMembers),
         next_payout_date: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000)
           .toISOString()
@@ -168,6 +190,15 @@ export const ImprovedCreateGroupModal = ({
 
       if (formData.type === "private") {
         groupData.secret_code = formData.secretCode.trim();
+      }
+
+      // Add Telegram verification fields for community groups
+      if (formData.type === "community") {
+        groupData.telegram_verification_enabled = formData.telegramVerificationEnabled;
+        if (formData.telegramVerificationEnabled) {
+          groupData.telegram_group_handle = formData.telegramGroupHandle.trim().replace(/^@/, '');
+          groupData.min_membership_months = parseInt(formData.minMembershipMonths);
+        }
       }
 
       const { data: group, error: groupError } = await supabase
@@ -193,7 +224,12 @@ export const ImprovedCreateGroupModal = ({
       setInviteLink(link);
       nextStep(); // Move to final step showing invite link
 
-      toast({ title: "Circle created successfully!" });
+      toast({ 
+        title: "Circle created successfully!",
+        description: formData.type === "community" && formData.telegramVerificationEnabled 
+          ? "Community circle with Telegram verification is now active"
+          : undefined
+      });
       onGroupCreated?.();
     } catch (error: unknown) {
       toast({
@@ -217,6 +253,9 @@ export const ImprovedCreateGroupModal = ({
       maxMembers: "",
       payoutOrder: "sequential",
       secretCode: "",
+      telegramGroupHandle: "",
+      telegramVerificationEnabled: false,
+      minMembershipMonths: "6",
     });
     setInviteLink("");
     setLinkCopied(false);
@@ -345,8 +384,77 @@ export const ImprovedCreateGroupModal = ({
             </div>
           )}
 
-          {/* Step 3: Member Limit */}
-          {currentStep === 3 && (
+          {/* Step 3: Telegram Verification (for community groups) */}
+          {currentStep === 3 && formData.type === "community" && (
+            <div className="space-y-4">
+              <div className="text-center mb-4">
+                <h3 className="text-lg font-semibold">Telegram Verification</h3>
+                <p className="text-sm text-muted-foreground">
+                  Set up Telegram verification for your community circle
+                </p>
+              </div>
+
+              <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <MessageCircle className="w-4 h-4 text-primary" />
+                    <Label htmlFor="telegramVerification">Enable Telegram Verification</Label>
+                  </div>
+                  <Switch
+                    id="telegramVerification"
+                    checked={formData.telegramVerificationEnabled}
+                    onCheckedChange={(checked) =>
+                      setFormData({ ...formData, telegramVerificationEnabled: checked })
+                    }
+                  />
+                </div>
+                
+                {formData.telegramVerificationEnabled && (
+                  <div className="space-y-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="telegramGroupHandle">Telegram Group Handle</Label>
+                      <Input
+                        id="telegramGroupHandle"
+                        value={formData.telegramGroupHandle}
+                        onChange={(e) =>
+                          setFormData({ ...formData, telegramGroupHandle: e.target.value })
+                        }
+                        placeholder="@yourgroup or yourgroup"
+                        required={formData.telegramVerificationEnabled}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        The Telegram group users must be members of to join this circle
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="minMembershipMonths">Minimum Membership (months)</Label>
+                      <Select
+                        value={formData.minMembershipMonths}
+                        onValueChange={(value) =>
+                          setFormData({ ...formData, minMembershipMonths: value })
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">1 month</SelectItem>
+                          <SelectItem value="3">3 months</SelectItem>
+                          <SelectItem value="6">6 months</SelectItem>
+                          <SelectItem value="12">12 months</SelectItem>
+                          <SelectItem value="24">24 months</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Step 3 or 4: Member Limit */}
+          {currentStep === (formData.type === "community" ? 4 : 3) && (
             <div className="space-y-4">
               <div className="text-center mb-4">
                 <h3 className="text-lg font-semibold">Set member limit</h3>
@@ -392,8 +500,8 @@ export const ImprovedCreateGroupModal = ({
             </div>
           )}
 
-          {/* Step 4: Monthly Contribution */}
-          {currentStep === 4 && (
+          {/* Step 4 or 5: Monthly Contribution */}
+          {currentStep === (formData.type === "community" ? 5 : 4) && (
             <div className="space-y-4">
               <div className="text-center mb-4">
                 <h3 className="text-lg font-semibold">
@@ -435,8 +543,8 @@ export const ImprovedCreateGroupModal = ({
             </div>
           )}
 
-          {/* Step 5: Payout Order Rules */}
-          {currentStep === 5 && (
+          {/* Step 5 or 6: Payout Order Rules */}
+          {currentStep === (formData.type === "community" ? 6 : 5) && (
             <div className="space-y-4">
               <div className="text-center mb-4">
                 <h3 className="text-lg font-semibold">Payout order</h3>
@@ -501,8 +609,8 @@ export const ImprovedCreateGroupModal = ({
             </div>
           )}
 
-          {/* Step 6: Secret Code (for private groups) or Confirmation */}
-          {currentStep === 6 && (
+          {/* Step 6 or 7: Secret Code (for private groups) or Confirmation */}
+          {currentStep === (formData.type === "community" ? 7 : 6) && (
             <div className="space-y-4">
               {formData.type === "private" ? (
                 <>
@@ -575,6 +683,16 @@ export const ImprovedCreateGroupModal = ({
                         ).toFixed(7)}{" "}
                         ETH
                       </div>
+                      {formData.type === "community" && formData.telegramVerificationEnabled && (
+                        <>
+                          <div>
+                            <strong>Telegram Group:</strong> {formData.telegramGroupHandle}
+                          </div>
+                          <div>
+                            <strong>Min Membership:</strong> {formData.minMembershipMonths} months
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                 </>
@@ -636,14 +754,16 @@ export const ImprovedCreateGroupModal = ({
               Back
             </Button>
 
-            {currentStep < 6 && (
+            {currentStep < (formData.type === "community" ? 7 : 6) && (
               <Button
                 onClick={nextStep}
                 disabled={
                   (currentStep === 1 &&
                     (!formData.name || !formData.description)) ||
-                  (currentStep === 3 && !formData.maxMembers) ||
-                  (currentStep === 4 && !formData.monthlyAmount)
+                  (currentStep === 3 && formData.type === "community" && 
+                    formData.telegramVerificationEnabled && !formData.telegramGroupHandle) ||
+                  (currentStep === (formData.type === "community" ? 4 : 3) && !formData.maxMembers) ||
+                  (currentStep === (formData.type === "community" ? 5 : 4) && !formData.monthlyAmount)
                 }
               >
                 Next
@@ -651,7 +771,7 @@ export const ImprovedCreateGroupModal = ({
               </Button>
             )}
 
-            {currentStep === 6 && (
+            {currentStep === (formData.type === "community" ? 7 : 6) && (
               <Button
                 onClick={handleSubmit}
                 disabled={
