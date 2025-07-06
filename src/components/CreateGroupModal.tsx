@@ -86,7 +86,7 @@ export const CreateGroupModal = ({
         description: formData.description,
         type: formData.type,
         creator_id: user.id, // Explicitly set the creator_id
-        monthly_amount: Math.round(parseFloat(formData.monthlyAmount) * 100), // Convert to cents
+        monthly_amount: Math.round(parseFloat(formData.monthlyAmount) * 1e18), // Convert to wei
         max_members: parseInt(formData.maxMembers),
         next_payout_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
           .toISOString()

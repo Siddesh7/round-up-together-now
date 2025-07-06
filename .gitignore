@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+treasury-service/node_modules
+treasury-service/package-lock.json
+treasury-service/dist
+treasury-service/.env

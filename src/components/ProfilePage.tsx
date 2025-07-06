@@ -1,89 +1,91 @@
-
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { 
-  User, 
-  CircleDollarSign, 
-  Calendar, 
-  TrendingUp, 
-  Shield, 
+import React from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAuth } from "@/hooks/useAuth";
+import {
+  User,
+  CircleDollarSign,
+  Calendar,
+  TrendingUp,
+  Shield,
   Award,
   Settings,
-  Bell
-} from 'lucide-react';
+  Bell,
+} from "lucide-react";
 
 const contributionHistory = [
   {
-    id: '1',
-    groupName: 'Family Savings Circle',
+    id: "1",
+    groupName: "Family Savings Circle",
     amount: 500,
-    date: 'Jan 1, 2024',
-    status: 'completed',
-    type: 'contribution'
+    date: "Jan 1, 2024",
+    status: "completed",
+    type: "contribution",
   },
   {
-    id: '2',
-    groupName: 'Young Professionals Network',
+    id: "2",
+    groupName: "Young Professionals Network",
     amount: 4000,
-    date: 'Dec 15, 2023',
-    status: 'received',
-    type: 'payout'
+    date: "Dec 15, 2023",
+    status: "received",
+    type: "payout",
   },
   {
-    id: '3',
-    groupName: 'Neighborhood Friends',
+    id: "3",
+    groupName: "Neighborhood Friends",
     amount: 100,
-    date: 'Dec 1, 2023',
-    status: 'completed',
-    type: 'contribution'
+    date: "Dec 1, 2023",
+    status: "completed",
+    type: "contribution",
   },
   {
-    id: '4',
-    groupName: 'Family Savings Circle',
+    id: "4",
+    groupName: "Family Savings Circle",
     amount: 500,
-    date: 'Dec 1, 2023',
-    status: 'completed',
-    type: 'contribution'
-  }
+    date: "Dec 1, 2023",
+    status: "completed",
+    type: "contribution",
+  },
 ];
 
 const achievements = [
   {
-    title: 'Early Adopter',
-    description: 'One of the first 1000 users',
-    icon: '🌟',
-    earned: true
+    title: "Early Adopter",
+    description: "One of the first 1000 users",
+    icon: "🌟",
+    earned: true,
   },
   {
-    title: 'Reliable Contributor',
-    description: '12 consecutive months of on-time payments',
-    icon: '⏰',
-    earned: true
+    title: "Reliable Contributor",
+    description: "12 consecutive months of on-time payments",
+    icon: "⏰",
+    earned: true,
   },
   {
-    title: 'Community Builder',
-    description: 'Created 3 successful groups',
-    icon: '🏗️',
-    earned: false
+    title: "Community Builder",
+    description: "Created 3 successful groups",
+    icon: "🏗️",
+    earned: false,
   },
   {
-    title: 'Savings Champion',
-    description: 'Saved over $10,000 through groups',
-    icon: '🏆',
-    earned: false
-  }
+    title: "Savings Champion",
+    description: "Saved over $10,000 through groups",
+    icon: "🏆",
+    earned: false,
+  },
 ];
 
 export const ProfilePage = () => {
+  const { user } = useAuth();
+
   const userStats = {
     totalContributed: 8400,
     totalReceived: 4000,
     activeGroups: 3,
     completedGroups: 2,
-    trustScore: 98
+    trustScore: 98,
   };
 
   return (
@@ -113,20 +115,24 @@ export const ProfilePage = () => {
             <Card className="border-0 shadow-md">
               <CardContent className="p-6 text-center">
                 <Avatar className="w-24 h-24 mx-auto mb-4">
-                  <AvatarImage src="/placeholder.svg" alt="Sarah Johnson" />
+                  <AvatarImage src={user?.user_metadata?.avatar_url} />
                   <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
                     SJ
                   </AvatarFallback>
                 </Avatar>
-                
+
                 <h2 className="text-xl font-bold mb-1">Sarah Johnson</h2>
-                <p className="text-muted-foreground mb-4">sarah.johnson@email.com</p>
-                
+                <p className="text-muted-foreground mb-4">
+                  sarah.johnson@email.com
+                </p>
+
                 <div className="flex items-center justify-center gap-2 mb-4">
                   <Shield className="w-5 h-5 text-success" />
-                  <span className="text-sm font-medium text-success">Verified Member</span>
+                  <span className="text-sm font-medium text-success">
+                    Verified Member
+                  </span>
                 </div>
-                
+
                 <div className="bg-success-light rounded-lg p-3">
                   <div className="text-2xl font-bold text-success">
                     {userStats.trustScore}%
@@ -145,7 +151,9 @@ export const ProfilePage = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Total Contributed</span>
+                  <span className="text-muted-foreground">
+                    Total Contributed
+                  </span>
                   <span className="font-semibold">
                     ${userStats.totalContributed.toLocaleString()}
                   </span>
@@ -158,11 +166,17 @@ export const ProfilePage = () => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Active Groups</span>
-                  <span className="font-semibold">{userStats.activeGroups}</span>
+                  <span className="font-semibold">
+                    {userStats.activeGroups}
+                  </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Completed Groups</span>
-                  <span className="font-semibold">{userStats.completedGroups}</span>
+                  <span className="text-muted-foreground">
+                    Completed Groups
+                  </span>
+                  <span className="font-semibold">
+                    {userStats.completedGroups}
+                  </span>
                 </div>
               </CardContent>
             </Card>
@@ -181,43 +195,58 @@ export const ProfilePage = () => {
               <CardContent>
                 <div className="space-y-4">
                   {contributionHistory.map((transaction) => (
-                    <div 
+                    <div
                       key={transaction.id}
                       className="flex items-center justify-between p-4 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors"
                     >
                       <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                          transaction.type === 'payout' 
-                            ? 'bg-success-light text-success' 
-                            : 'bg-trust-blue-light text-trust-blue'
-                        }`}>
+                        <div
+                          className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                            transaction.type === "payout"
+                              ? "bg-success-light text-success"
+                              : "bg-trust-blue-light text-trust-blue"
+                          }`}
+                        >
                           <CircleDollarSign className="w-5 h-5" />
                         </div>
                         <div>
-                          <div className="font-medium">{transaction.groupName}</div>
+                          <div className="font-medium">
+                            {transaction.groupName}
+                          </div>
                           <div className="text-sm text-muted-foreground">
                             {transaction.date}
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="text-right">
-                        <div className={`font-semibold ${
-                          transaction.type === 'payout' ? 'text-success' : 'text-foreground'
-                        }`}>
-                          {transaction.type === 'payout' ? '+' : '-'}${transaction.amount}
+                        <div
+                          className={`font-semibold ${
+                            transaction.type === "payout"
+                              ? "text-success"
+                              : "text-foreground"
+                          }`}
+                        >
+                          {transaction.type === "payout" ? "+" : "-"}$
+                          {transaction.amount}
                         </div>
-                        <Badge 
-                          variant={transaction.status === 'completed' ? 'default' : 'secondary'}
+                        <Badge
+                          variant={
+                            transaction.status === "completed"
+                              ? "default"
+                              : "secondary"
+                          }
                           className="text-xs"
                         >
-                          {transaction.type === 'payout' ? 'Received' : 'Contributed'}
+                          {transaction.type === "payout"
+                            ? "Received"
+                            : "Contributed"}
                         </Badge>
                       </div>
                     </div>
                   ))}
                 </div>
-                
+
                 <Button variant="outline" className="w-full mt-4">
                   View Full History
                 </Button>
@@ -235,16 +264,18 @@ export const ProfilePage = () => {
               <CardContent>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {achievements.map((achievement, index) => (
-                    <div 
+                    <div
                       key={index}
                       className={`p-4 rounded-lg border-2 transition-all duration-300 ${
-                        achievement.earned 
-                          ? 'border-success bg-success-light hover:scale-105' 
-                          : 'border-muted bg-muted/30 opacity-60'
+                        achievement.earned
+                          ? "border-success bg-success-light hover:scale-105"
+                          : "border-muted bg-muted/30 opacity-60"
                       }`}
                     >
                       <div className="text-2xl mb-2">{achievement.icon}</div>
-                      <div className="font-semibold mb-1">{achievement.title}</div>
+                      <div className="font-semibold mb-1">
+                        {achievement.title}
+                      </div>
                       <div className="text-sm text-muted-foreground">
                         {achievement.description}
                       </div>

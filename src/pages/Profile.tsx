@@ -1,8 +1,7 @@
-
-import { ProfilePage } from '@/components/ProfilePage';
+import { EnhancedProfilePage } from "@/components/EnhancedProfilePage";
 
 const Profile = () => {
-  return <ProfilePage />;
+  return <EnhancedProfilePage />;
 };
 
 export default Profile;
