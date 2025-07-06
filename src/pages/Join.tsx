@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useParams, useSearchParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useGroups } from "@/hooks/useGroups";
 import { supabase } from "@/integrations/supabase/client";
 import { TelegramVerificationModal } from "@/components/TelegramVerificationModal";
+import { NotificationBell } from "@/components/NotificationBell";
+import { AuthButton } from "@/components/AuthButton";
 import {
   Users,
   CircleDollarSign,
@@ -21,8 +24,6 @@ import {
   ArrowLeft,
   CheckCircle,
   MessageCircle,
-  NotificationBell,
-  AuthButton,
   AlertCircle,
 } from "lucide-react";
 
