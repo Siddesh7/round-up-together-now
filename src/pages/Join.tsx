@@ -376,7 +376,7 @@ const Join = () => {
               </Alert>
             )}
 
-          {/* Private Group Secret Code */}
+          {/* Private Group Secret Code - Only show if not already a member */}
           {group.type === "private" &&
             !alreadyMember &&
             (group.current_members || 0) < group.max_members && (
@@ -395,7 +395,7 @@ const Join = () => {
               </div>
             )}
 
-          {/* Join Button */}
+          {/* Join Button - Only show if not already a member and group is not full */}
           {!alreadyMember &&
             (group.current_members || 0) < group.max_members && (
               <div className="space-y-4">
@@ -430,6 +430,15 @@ const Join = () => {
                 </div>
               </div>
             )}
+
+          {/* Show back to dashboard button if already a member */}
+          {alreadyMember && (
+            <div className="flex justify-center">
+              <Button onClick={() => navigate("/dashboard")} className="w-full">
+                Go to Dashboard
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 
