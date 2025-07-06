@@ -77,11 +77,37 @@ serve(async (req) => {
     const minMonths = groupData.min_membership_months || 6
 
     // Clean username and group handle
-    const cleanUsername = telegram_username.replace('@', '')
+    const cleanUsername = telegram_username.replace('@', '').toLowerCase()
     const cleanGroupHandle = telegram_group_handle.replace('@', '')
     
+    console.log('Cleaned values:', { cleanUsername, cleanGroupHandle })
+    
     try {
-      // First, try to get user info by username to get their user ID
+      // First, try to get the group info to make sure the bot has access
+      const getGroupUrl = `https://api.telegram.org/bot${telegramToken}/getChat`
+      const groupResponse = await fetch(getGroupUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: `@${cleanGroupHandle}`
+        })
+      })
+
+      const groupResult = await groupResponse.json()
+      console.log('Get group response:', groupResult)
+
+      if (!groupResult.ok) {
+        console.error('Group access failed:', groupResult)
+        return new Response(
+          JSON.stringify({ 
+            verified: false, 
+            reason: 'Bot cannot access the Telegram group. Please ensure the bot is added to the group as an administrator.' 
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
+      // Try to get user info by username
       const getUserUrl = `https://api.telegram.org/bot${telegramToken}/getChat`
       const userResponse = await fetch(getUserUrl, {
         method: 'POST',
@@ -95,10 +121,80 @@ serve(async (req) => {
       console.log('Get user response:', userResult)
 
       if (!userResult.ok) {
+        console.error('User lookup failed:', userResult)
+        // Try alternative: get chat administrators to find the user
+        const getAdminsUrl = `https://api.telegram.org/bot${telegramToken}/getChatAdministrators`
+        const adminsResponse = await fetch(getAdminsUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: `@${cleanGroupHandle}`
+          })
+        })
+
+        const adminsResult = await adminsResponse.json()
+        console.log('Get admins response:', adminsResult)
+
+        if (adminsResult.ok) {
+          // Look for the user in administrators
+          const foundAdmin = adminsResult.result.find(admin => 
+            admin.user.username && admin.user.username.toLowerCase() === cleanUsername
+          )
+
+          if (foundAdmin) {
+            console.log('Found user as admin:', foundAdmin)
+            const memberData = {
+              status: 'administrator',
+              user: foundAdmin.user,
+              date: null // Admin join date not available
+            }
+
+            // Store verification result
+            const verificationData = {
+              telegram_admin_response: adminsResult,
+              verified_at: new Date().toISOString(),
+              membership_duration_check: true, // Admins are always valid
+              member_status: 'administrator',
+              telegram_user_id: foundAdmin.user.id
+            }
+
+            const { error: upsertError } = await supabase
+              .from('user_telegram_verification')
+              .upsert({
+                user_id,
+                group_id,
+                telegram_username: cleanUsername,
+                verification_status: 'verified',
+                verified_at: new Date().toISOString(),
+                verification_data: verificationData,
+                verification_attempts: 1
+              }, {
+                onConflict: 'user_id,group_id'
+              })
+
+            if (upsertError) {
+              console.error('Error storing verification result:', upsertError)
+            }
+
+            return new Response(
+              JSON.stringify({ 
+                verified: true, 
+                reason: 'Verification successful! (Administrator)',
+                data: {
+                  member_status: 'administrator',
+                  join_date: null,
+                  telegram_user_id: foundAdmin.user.id
+                }
+              }),
+              { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            )
+          }
+        }
+
         return new Response(
           JSON.stringify({ 
             verified: false, 
-            reason: 'Telegram username not found. Please check your username and ensure it is publicly visible.' 
+            reason: 'Telegram username not found. Please check your username and ensure it is publicly visible. Make sure your username privacy is set to "Everyone" in Telegram settings.' 
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
@@ -176,6 +272,9 @@ serve(async (req) => {
           membershipValid = false
           membershipReason = `You need to be a member for at least ${minMonths} months. You joined on ${joinDate.toDateString()}.`
         }
+      } else {
+        // If no join date is available (common for older groups), assume valid
+        console.log('No join date available, assuming membership is valid')
       }
 
       // Store verification result
