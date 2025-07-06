@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import {
   Card,
@@ -19,22 +20,28 @@ import {
   Zap,
 } from "lucide-react";
 import { useTreasury } from "../hooks/use-treasury";
+import { useIntMaxContext } from "../contexts/IntMaxContext";
 
 export const TreasuryDashboard: React.FC = () => {
   const treasury = useTreasury();
+  const intmax = useIntMaxContext();
   const [selectedGroupId, setSelectedGroupId] = useState<number>(1);
 
   useEffect(() => {
     // Initialize INTMAX on component mount
-    if (!treasury.intmaxConnected) {
-      treasury.connectIntmax();
+    if (!intmax.client && !intmax.loading) {
+      intmax.initializeClient();
     }
-  }, []);
+  }, [intmax.client, intmax.loading, intmax.initializeClient]);
 
   const handleConnectIntmax = async () => {
     try {
-      await treasury.connectIntmax();
-      await treasury.loginIntmax();
+      if (!intmax.client) {
+        await intmax.initializeClient();
+      }
+      if (intmax.client && !intmax.isLoggedIn) {
+        await intmax.login();
+      }
     } catch (error) {
       console.error("Failed to connect INTMAX:", error);
     }
@@ -42,12 +49,18 @@ export const TreasuryDashboard: React.FC = () => {
 
   const handleProcessContribution = async () => {
     try {
-      const result = await treasury.processContribution(
-        selectedGroupId,
-        "0x742d35Cc6Fc9Aa45f3b4Ea94747e230fE8b5e1d8",
-        "0.1", // 0.1 ETH
-        false // Not first month
-      );
+      // First deposit via INTMAX
+      const depositResult = await intmax.depositToTreasury("0.1", selectedGroupId.toString());
+      
+      // Then record on smart contract via treasury service
+      const result = await treasury.recordContribution({
+        groupId: selectedGroupId.toString(),
+        memberAddress: intmax.address || "0x742d35Cc6Fc9Aa45f3b4Ea94747e230fE8b5e1d8",
+        amount: "0.1",
+        intmaxTxHash: depositResult.txHash,
+        isFirstMonth: false
+      });
+      
       console.log("Contribution processed:", result);
     } catch (error) {
       console.error("Failed to process contribution:", error);
@@ -56,11 +69,12 @@ export const TreasuryDashboard: React.FC = () => {
 
   const handleProcessPayout = async () => {
     try {
-      const result = await treasury.processPayout(
-        selectedGroupId,
-        "0x742d35Cc6Fc9Aa45f3b4Ea94747e230fE8b5e1d8",
-        3 // Payout order 3 (will get interest)
-      );
+      const result = await treasury.processPayout({
+        groupId: selectedGroupId.toString(),
+        recipientAddress: intmax.address || "0x742d35Cc6Fc9Aa45f3b4Ea94747e230fE8b5e1d8",
+        payoutOrder: 3,
+        baseAmount: "0.1"
+      });
       console.log("Payout processed:", result);
     } catch (error) {
       console.error("Failed to process payout:", error);
@@ -76,13 +90,14 @@ export const TreasuryDashboard: React.FC = () => {
           <p className="text-gray-600">INTMAX Layer 2 Payment Management</p>
         </div>
 
-        {!treasury.intmaxConnected ? (
+        {!intmax.isLoggedIn ? (
           <Button
             onClick={handleConnectIntmax}
             className="flex items-center gap-2"
+            disabled={intmax.loading}
           >
             <Wallet className="w-4 h-4" />
-            Connect INTMAX
+            {intmax.loading ? "Connecting..." : "Connect INTMAX"}
           </Button>
         ) : (
           <Badge
@@ -96,12 +111,13 @@ export const TreasuryDashboard: React.FC = () => {
       </div>
 
       {/* Connection Status */}
-      {treasury.intmaxConnected && (
+      {intmax.isLoggedIn && (
         <Alert>
           <Shield className="h-4 w-4" />
           <AlertDescription>
-            Treasury Balance: <strong>{treasury.formattedBalance}</strong> |
-            Last Operation: {treasury.lastOperation || "None"}
+            Treasury Balance: <strong>{intmax.formattedBalance} ETH</strong> |
+            Address: <strong>{intmax.address?.slice(0, 10)}...</strong> |
+            Last Operation: {treasury.error ? "Error" : "Ready"}
           </AlertDescription>
         </Alert>
       )}
@@ -126,7 +142,7 @@ export const TreasuryDashboard: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {treasury.formattedBalance}
+                  {intmax.formattedBalance} ETH
                 </div>
                 <p className="text-xs text-muted-foreground">
                   Available for payouts
@@ -143,10 +159,10 @@ export const TreasuryDashboard: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {treasury.processing ? "Processing" : "Ready"}
+                  {treasury.loading || intmax.loading ? "Processing" : "Ready"}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {treasury.processing
+                  {treasury.loading || intmax.loading
                     ? "Transaction in progress"
                     : "Ready for operations"}
                 </p>
@@ -162,7 +178,7 @@ export const TreasuryDashboard: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {treasury.intmaxTransactions.length}
+                  {intmax.transactions.length}
                 </div>
                 <p className="text-xs text-muted-foreground">
                   INTMAX transactions processed
@@ -260,13 +276,13 @@ export const TreasuryDashboard: React.FC = () => {
 
               <Button
                 onClick={handleProcessContribution}
-                disabled={treasury.processing || !treasury.intmaxConnected}
+                disabled={treasury.loading || intmax.loading || !intmax.isLoggedIn}
                 className="w-full"
               >
-                {treasury.processing ? "Processing..." : "Process Contribution"}
+                {treasury.loading || intmax.loading ? "Processing..." : "Process Contribution"}
               </Button>
 
-              {treasury.processing && (
+              {(treasury.loading || intmax.loading) && (
                 <Alert>
                   <Clock className="h-4 w-4" />
                   <AlertDescription>
@@ -325,10 +341,10 @@ export const TreasuryDashboard: React.FC = () => {
 
               <Button
                 onClick={handleProcessPayout}
-                disabled={treasury.processing || !treasury.intmaxConnected}
+                disabled={treasury.loading || intmax.loading || !intmax.isLoggedIn}
                 className="w-full"
               >
-                {treasury.processing ? "Processing..." : "Process Payout"}
+                {treasury.loading || intmax.loading ? "Processing..." : "Process Payout"}
               </Button>
             </CardContent>
           </Card>
@@ -344,26 +360,26 @@ export const TreasuryDashboard: React.FC = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {treasury.intmaxTransactions.length === 0 ? (
+              {intmax.transactions.length === 0 ? (
                 <p className="text-gray-500 text-center py-8">
                   No transactions yet
                 </p>
               ) : (
                 <div className="space-y-3">
-                  {treasury.intmaxTransactions.map((tx) => (
+                  {intmax.transactions.map((tx) => (
                     <div
                       key={tx.txHash}
                       className="flex items-center justify-between p-3 border rounded"
                     >
                       <div>
                         <div className="flex items-center gap-2">
-                          {tx.from === "treasury_wallet" ? (
+                          {tx.from === intmax.address ? (
                             <ArrowUpRight className="w-4 h-4 text-green-500" />
                           ) : (
                             <ArrowDownLeft className="w-4 h-4 text-blue-500" />
                           )}
                           <span className="font-medium">
-                            {tx.from === "treasury_wallet"
+                            {tx.from === intmax.address
                               ? "Payout"
                               : "Contribution"}
                           </span>
